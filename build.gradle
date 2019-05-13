@@ -1,0 +1,66 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'idea'
+    id 'application'
+}
+
+group = 'top.easyboot'
+version = '0.0.1-SNAPSHOT'
+
+repositories {
+    mavenLocal()
+    maven{
+        url 'https://maven.aliyun.com/repository/public'
+    }
+}
+ext {
+    springCloudVersion = 'Greenwich.RELEASE'
+    springBootVersion = '2.1.4.RELEASE'
+    compileJava.options.encoding = 'UTF-8'
+    compileTestJava.options.encoding = 'UTF-8'
+}
+dependencies {
+    /**
+     * 网关模块
+     */
+    compileOnly "org.springframework.cloud:spring-cloud-starter-gateway:2.1.1.RELEASE"
+    runtimeOnly 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
+    compileOnly 'org.springframework.boot:spring-boot-starter:2.1.4.RELEASE'
+    compileOnly 'org.springframework.boot:spring-boot-starter-web:2.1.4.RELEASE'
+}
+
+sourceSets {
+    main.java.srcDir "src/main/java"
+    main.resources.srcDir "src/main/resources"
+}
+jar {
+    manifest {
+        attributes(
+                'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+                'Main-Class': 'top.easyboot.springboot.restfulapi.Application'
+        )
+    }
+}
+
+task sourcesJar(type: Jar) {
+    from(sourceSets.main.allJava)
+}
+
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from(components.java)
+            artifact(sourcesJar)
+        }
+    }
+}
+
+// JVM 版本号要求
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
