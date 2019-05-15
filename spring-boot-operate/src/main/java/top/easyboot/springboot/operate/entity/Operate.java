@@ -118,7 +118,8 @@ public class Operate {
             try {
                 operate = Jackson.getObjectMapper().readValue(infoStr, Operate.class);
             }catch (Exception e){
-                System.out.println(e);
+                // todo
+                e.printStackTrace();
             }
         }
         if (operate == null){

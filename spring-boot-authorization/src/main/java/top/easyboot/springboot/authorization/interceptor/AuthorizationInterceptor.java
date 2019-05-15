@@ -48,7 +48,6 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
         HandlerMethod method = (HandlerMethod)handler;
         boolean hasAuthAnnotation = isAllVerify || (method.getMethod().isAnnotationPresent(VerifyAuthorization.class) || method.getMethod().getDeclaringClass().isAnnotationPresent(VerifyAuthorization.class));
 
-        System.out.println(applicationContext);
         // 不存在OperateLoginRequired注解，则直接通过，放弃切面
         if(!hasAuthAnnotation){
             return true;
