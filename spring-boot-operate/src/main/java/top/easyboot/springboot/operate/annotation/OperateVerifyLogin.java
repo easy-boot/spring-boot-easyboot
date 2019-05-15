@@ -6,6 +6,6 @@ import java.lang.annotation.*;
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface OperateLogin {
+public @interface OperateVerifyLogin {
     boolean required() default true;
 }

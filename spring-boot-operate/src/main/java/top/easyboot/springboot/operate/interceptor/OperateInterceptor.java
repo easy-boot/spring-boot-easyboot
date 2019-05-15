@@ -2,7 +2,7 @@ package top.easyboot.springboot.operate.interceptor;
 
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
-import top.easyboot.springboot.operate.annotation.OperateLogin;
+import top.easyboot.springboot.operate.annotation.OperateVerifyLogin;
 import top.easyboot.springboot.operate.entity.Operate;
 import top.easyboot.springboot.operate.utils.GetOperate;
 
@@ -22,14 +22,14 @@ public class OperateInterceptor implements HandlerInterceptor {
             return true;
         }
         HandlerMethod method = (HandlerMethod)handler;
-        boolean hasLoginAnnotation=method.getMethod().isAnnotationPresent(OperateLogin.class);
+        boolean hasLoginAnnotation=method.getMethod().isAnnotationPresent(OperateVerifyLogin.class);
         /**
          * 不存在OperateLoginRequired注解，则直接通过
          */
         if(!hasLoginAnnotation){
             return true;
         }
-        OperateLogin loginRequired=method.getMethod().getAnnotation(OperateLogin.class);
+        OperateVerifyLogin loginRequired=method.getMethod().getAnnotation(OperateVerifyLogin.class);
 
         /**
          * 2.required=false,则无需检查是否登录
