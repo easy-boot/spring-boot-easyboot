@@ -1,0 +1,167 @@
+buildscript {
+    dependencies {
+        classpath "io.spring.gradle:dependency-management-plugin:1.0.7.RELEASE"
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:2.1.4.RELEASE"
+    }
+}
+plugins {
+    id 'org.springframework.boot' version '2.1.4.RELEASE'
+    id 'java'
+    id 'idea'
+}
+
+idea.project {
+    jdkName = JavaVersion.VERSION_1_8
+    languageLevel = JavaVersion.VERSION_1_8
+    ipr {
+        withXml { provider ->
+            provider.node.component.find { it.@name == 'VcsDirectoryMappings' }.mapping.@vcs = 'Git'
+        }
+    }
+}
+allprojects {
+    /**
+     * 版本
+     */
+    version = '0.0.1-SNAPSHOT'
+    /**
+     * 组
+     */
+    group = 'top.easyboot.springboot'
+    ext {
+        springCloudVersion = 'Greenwich.RELEASE'
+        compileJava.options.encoding = 'UTF-8'
+        compileTestJava.options.encoding = 'UTF-8'
+    }
+    apply plugin: 'java'
+    apply plugin: 'maven'
+    apply plugin: 'maven-publish'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    sourceCompatibility = JavaVersion.VERSION_1_8
+
+    tasks.withType(JavaCompile) {
+        /**
+         * 全局编码
+         */
+        options.encoding = 'UTF-8'
+        /**
+         * JVM 版本号要求 源
+         */
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        /**
+         * JVM 版本号要求 测试
+         */
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    repositories {
+        /**
+         * 本地maven仓库
+         */
+        mavenLocal()
+        /**
+         * maven中央仓库，由Sonatype公司提供的服务，它是Apache Maven、SBT和其他构建系统的默认仓库
+         */
+        maven{ url 'https://maven.aliyun.com/repository/public'}
+        /**
+         * sonatype
+         */
+        maven{ url 'https://oss.sonatype.org/content/groups/public'}
+    }
+
+
+    dependencies {
+        /**
+         * 网关模块
+         */
+        compileOnly "org.springframework.cloud:spring-cloud-starter-gateway"
+        compileOnly 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
+        compileOnly 'org.springframework.boot:spring-boot-starter'
+        compileOnly 'org.springframework.boot:spring-boot-starter-web'
+        testCompileOnly 'org.springframework.boot:spring-boot-starter-test'
+        testCompile group: 'junit', name: 'junit', version: '4.12'
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        }
+    }
+
+    /**
+     * 推送maven仓库
+     */
+    publishing {
+        publications {
+            // 这一个推送项目名称，mavenJava 相当于是一个 task name
+            maven(MavenPublication) {
+                /**
+                 * 指定group/artifact/version信息，可以不填。
+                 * 默认使用项目group/name/version作为groupId/artifactId/version
+                 */
+                groupId project.group
+                artifactId project.name
+                version project.version
+
+                /**
+                 * 如果是war包填写components.web，如果是jar包填写components.java
+                 */
+                from components.java
+
+                // 添加 pom 相关信息
+                // https://docs.gradle.org/current/dsl/org.gradle.api.publish.maven.MavenPublication.html
+                pom {
+                    name = project.name
+                    description = "spring-boot-restful-api"
+                    url = "https://github.com/easyboot-top/springboot-restfulapi"
+                    licenses {
+                        license {
+                            name = "The Apache License, Version 2.0"
+                            url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                        }
+                    }
+                }
+            }
+        }
+        repositories {
+            // 添加一个远程仓库地址
+            maven {
+                // 在对 task 中会生成对应的名称 publishMavenJavaPublicationToxxx
+                // 后面的 xxx 就是你这里的名称，表示你要把jar 上传到这个仓库中
+
+                if (project.version.endsWith('-SNAPSHOT')) {
+                    // 快照版本的nexus|snapshots仓库地址
+                    name = 'sonatypeSnapshotRepository'
+                    url = 'https://oss.sonatype.org/content/repositories/snapshots/'
+                } else {
+                    // release版本的仓库地址
+                    name 'sonatypeRepository'
+                    url 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+                }
+
+                credentials {
+                    username = "yuchonghua"  // 之前在 sonatype 注册的账户名
+                    password = "Ych*13692633255" // 对应的密码
+                }
+            }
+        }
+    }
+}
+dependencies{
+    compile project(':spring-boot-restful-api')
+    compile project(':spring-boot-operate')
+    compile project(':spring-boot-authorization')
+}
+jar {
+    enabled = true
+    version = rootProject.getVersion()
+    // 不希望打包进去
+    //from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    manifest {
+        attributes(
+                'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+                'Main-Class': 'top.easyboot.springboot.easyboot.Application'
+        )
+    }
+}

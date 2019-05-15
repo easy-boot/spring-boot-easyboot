@@ -1,0 +1,323 @@
+package top.easyboot.springboot.gateway.filter;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.gateway.filter.GatewayFilter;
+import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+import top.easyboot.springboot.authorization.component.Client;
+import top.easyboot.springboot.authorization.entity.Authorization;
+import top.easyboot.springboot.authorization.entity.AuthorizationInput;
+import top.easyboot.springboot.authorization.exception.AuthSignException;
+import top.easyboot.springboot.operate.entity.Operate;
+
+import java.nio.charset.StandardCharsets;
+import org.springframework.core.io.buffer.DataBuffer;
+import top.easyboot.springboot.restfulapi.entity.RestfulApiException;
+
+@Component
+public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory<RestfulApiGatewayFilterFactory.Config> {
+    private Factory factory;
+    /**
+     * 操作者头信息key
+     */
+    private String operateHeaderKey = "x-easyboot-operate-info";
+    /**
+     * 授权签名头信息key
+     */
+    private String authSignHeaderKey = "x-easyboot-authorization";
+    /**
+     * 授权头前缀
+     */
+    private String authSignHeadersPrefix = "x-easycms-";
+    private static final Log logger = LogFactory.getLog(RestfulApiGatewayFilterFactory.class);
+
+    /**
+     * 原始处理工厂
+     * @param factory
+     */
+    public RestfulApiGatewayFilterFactory(Factory factory) {
+        super(Config.class);
+        this.factory = factory;
+    }
+    /**
+     * 合并传入uid和授权信息存储处理工厂
+     * @param factory
+     */
+    public RestfulApiGatewayFilterFactory(UidStorageFactory factory) {
+        this(new Factory() {
+            Client client = new Client(factory);
+            @Override
+            public Authorization getAuthorization(AuthorizationInput authorizationInput) throws AuthSignException {
+                return client.getAuthorization(authorizationInput);
+            }
+
+            @Override
+            public int getUid(String accessKeyId) {
+                return factory.getUid(accessKeyId);
+            }
+        });
+    }
+
+    /**
+     * 独立传入uid和授权信息存储处理工厂
+     * @param uidFactory
+     * @param storage
+     */
+    public RestfulApiGatewayFilterFactory(UidFactory uidFactory, Client.Storage storage) {
+        this(new Factory() {
+            Client client = new Client(storage);
+            @Override
+            public Authorization getAuthorization(AuthorizationInput authorizationInput) throws AuthSignException {
+                return client.getAuthorization(authorizationInput);
+            }
+
+            @Override
+            public int getUid(String accessKeyId) {
+                return uidFactory.getUid(accessKeyId);
+            }
+        });
+    }
+
+    public String getAuthSignHeadersPrefix() {
+        return authSignHeadersPrefix;
+    }
+
+    public void setAuthSignHeadersPrefix(String authSignHeadersPrefix) {
+        this.authSignHeadersPrefix = authSignHeadersPrefix;
+    }
+
+    public String getOperateHeaderKey() {
+        return operateHeaderKey;
+    }
+
+    public void setOperateHeaderKey(String operateHeaderKey) {
+        this.operateHeaderKey = operateHeaderKey;
+    }
+
+    public String getAuthSignHeaderKey() {
+        return authSignHeaderKey;
+    }
+
+    public void setAuthSignHeaderKey(String authSignHeaderKey) {
+        this.authSignHeaderKey = authSignHeaderKey;
+    }
+
+    @Override
+    public GatewayFilter apply(Config config) {
+        return (exchangeOrigin, chain) -> {
+            System.out.println(config);
+            System.out.println(config.enabled);
+            /**
+             * 得到原始请求对象
+             */
+            ServerHttpRequest requestOrigin = exchangeOrigin.getRequest();
+            /**
+             * 得到一个请求的构建器对象
+             */
+            ServerHttpRequest.Builder requestBuilder = requestOrigin.mutate();
+            /**
+             * 得到一个exchange构建器对象
+             */
+            ServerWebExchange.Builder exchangeBuilder = exchangeOrigin.mutate();
+            /**
+             * 清理操作者信息，防止注入
+             */
+            requestBuilder.headers(httpHeaders -> httpHeaders.remove(operateHeaderKey).remove(authSignHeaderKey));
+            /**
+             * 实例化一个操作信息对象
+             */
+            Operate operate = new Operate();
+            /**
+             * 设置uid为0
+             * 也就是没有登录的意思
+             */
+            operate.setUid(0);
+            /**
+             * 没有授权id
+             */
+            operate.setAccessKeyId("");
+            /**
+             * 没有设备id
+             */
+            operate.setClientCard("");
+
+
+            /************************* 鉴权模块开始 *************************/
+
+            HttpHeaders httpHeaders = requestOrigin.getHeaders();
+
+            AuthorizationInput ai = new AuthorizationInput();
+            /**
+             * 试图获取授权头
+             */
+            ai.setUri(requestOrigin.getURI());
+            /**
+             * 试图获取请求方式
+             */
+            ai.setMethod(requestOrigin.getMethodValue());
+            /**
+             * 试图获取请求头
+             */
+            ai.setHeaders(httpHeaders.toSingleValueMap());
+            /**
+             * 授权头签字
+             */
+            ai.setAuthSignHeadersPrefix(authSignHeadersPrefix);
+
+            /**
+             * 先定义一个变量来接收授权数据
+             */
+            Authorization authorization =null;
+
+            AuthSignException authSignExceptionTemp = null;
+
+            try{
+                /**
+                 * 试图获取授权会话信息
+                 */
+                authorization = factory.getAuthorization(ai);
+            }catch (AuthSignException e){
+                authSignExceptionTemp = e;
+            }
+            AuthSignException authSignException = authSignExceptionTemp;
+
+
+            /**
+             * 保证存在一个授权对象
+             */
+            if (authorization == null){
+                /**
+                 * 实例化授权对象
+                 */
+                authorization = new Authorization();
+                /**
+                 * 重置授权状态通过为空
+                 */
+                authorization.setPassAuth(false);
+            }
+            /**
+             * 不同的授权，会清理授权keyid和客户端card
+             */
+            if (!authorization.isPassAuth()){
+                /**
+                 * 重置授权Id为空
+                 */
+                authorization.setAccessKeyId("");
+                /**
+                 * 重置客户端id为空
+                 */
+                authorization.setClientCard("");
+            }
+
+            /**
+             * 如果授权通过，就试图获取登录uid
+             */
+            if (authorization.isPassAuth()){
+                operate.setUid(factory.getUid(authorization.getAccessKeyId()));
+            }
+            /************************* 鉴权模块结束 *************************/
+
+            /**
+             * 序列化操作者信息并且设置到请求构建器中
+             */
+            requestBuilder.header(operateHeaderKey, operate.toString());
+            /**
+             * authorization信息
+             */
+            requestBuilder.header(authSignHeaderKey, authorization.toString());
+            /**
+             * 构建请求对象，并且构建一个exchange传递到下一个过滤器
+             */
+            ServerWebExchange exchange = exchangeBuilder.request(requestBuilder.build()).build();
+            /**
+             * 下一个过滤器
+             */
+            return chain.filter(exchange).then(Mono.defer(() -> {
+                /**
+                 * 得到响应
+                 */
+                ServerHttpResponse response = exchange.getResponse();
+                /**
+                 * 如何微服务返回了403，就把授权签名的错误直接传送到客户端
+                 */
+                HttpStatus httpStatus = response.getStatusCode();
+                if (authSignException!=null && httpStatus != null && httpStatus.equals(HttpStatus.FORBIDDEN)){
+                    /**
+                     * 构建一个异常
+                     */
+                    RestfulApiException res = new RestfulApiException();
+
+                    /**
+                     * 403状态错误
+                     */
+                    res.setStatsCode(403);
+                    /**
+                     * 提示消息
+                     */
+                    res.setMessage(authSignException.getMessage());
+                    /**
+                     * 异常id
+                     */
+                    res.setExceptionId(authSignException.getExceptionId());
+
+                    /**
+                     * 转换为bits
+                     */
+                    byte[] bits = res.toString().getBytes(StandardCharsets.UTF_8);
+                    /**
+                     * 转换为buffer
+                     */
+                    DataBuffer buffer = response.bufferFactory().wrap(bits);
+                    /**
+                     * 直接返回buffer
+                     */
+                    return response.writeWith(Mono.just(buffer));
+                }
+                /**
+                 * 下一个过滤器
+                 */
+                return chain.filter(exchange);
+            }));
+        };
+    }
+    public interface UidStorageFactory extends UidFactory, Client.Storage{
+
+    }
+    public interface Factory extends UidFactory {
+        /**
+         * 试图授权
+         * @param authorizationInput
+         * @return
+         */
+        Authorization getAuthorization(AuthorizationInput authorizationInput) throws AuthSignException;
+    }
+    public interface UidFactory {
+        /**
+         * 取得用户uid
+         * @param accessKeyId
+         * @return
+         */
+        int getUid(String accessKeyId);
+    }
+    public static class Config {
+        // 控制是否开启认证
+        private boolean enabled;
+
+        public Config() {}
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+    }
+}

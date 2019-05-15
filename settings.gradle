@@ -1,0 +1,11 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+}
+rootProject.name = 'spring-boot-easyboot'
+include 'spring-boot-restful-api'
+include 'spring-boot-operate'
+include 'spring-boot-authorization'
+include 'spring-boot-gateway'
+
