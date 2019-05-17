@@ -23,22 +23,6 @@ public class Operate {
      * 获取开始时间
      */
     protected long startTime = System.currentTimeMillis();
-    /**
-     * 请求id
-     */
-    protected String requestId = null;
-    /**
-     * 响应id
-     */
-    protected String responseId = null;
-    /**
-     * 会话id
-     */
-    private String accessKeyId = null;
-    /**
-     * 设备id
-     */
-    private String clientCard = null;
 
     public int getUid() {
         return uid;
@@ -69,38 +53,6 @@ public class Operate {
 
     public void setStartTime(long startTime) {
         this.startTime = startTime;
-    }
-
-    public String getRequestId() {
-        return requestId;
-    }
-
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
-    }
-
-    public String getResponseId() {
-        return responseId;
-    }
-
-    public void setResponseId(String responseId) {
-        this.responseId = responseId;
-    }
-
-    public String getAccessKeyId() {
-        return accessKeyId;
-    }
-
-    public void setAccessKeyId(String accessKeyId) {
-        this.accessKeyId = accessKeyId;
-    }
-
-    public String getClientCard() {
-        return clientCard;
-    }
-
-    public void setClientCard(String clientCard) {
-        this.clientCard = clientCard;
     }
 
     /**

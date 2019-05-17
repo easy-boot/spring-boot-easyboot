@@ -14,7 +14,7 @@ public class Exception extends java.lang.Exception {
     private RestfulApiException restfulApiException;
     private static int lastExceptionId = 0;
     private static HashMap<String, RestfulApiException> messageMap = new HashMap();
-    protected final static int id(){
+    public final static int id(){
         return ++lastExceptionId;
     }
 

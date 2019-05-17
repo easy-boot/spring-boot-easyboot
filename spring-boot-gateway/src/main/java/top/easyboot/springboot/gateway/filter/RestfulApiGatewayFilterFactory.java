@@ -17,9 +17,13 @@ import top.easyboot.springboot.authorization.entity.AuthorizationInput;
 import top.easyboot.springboot.authorization.exception.AuthSignException;
 import top.easyboot.springboot.operate.entity.Operate;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import org.springframework.core.io.buffer.DataBuffer;
 import top.easyboot.springboot.restfulapi.entity.RestfulApiException;
+
+import javax.servlet.http.HttpServletRequest;
 
 @Component
 public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory<RestfulApiGatewayFilterFactory.Config> {
@@ -140,14 +144,8 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
              * 也就是没有登录的意思
              */
             operate.setUid(0);
-            /**
-             * 没有授权id
-             */
-            operate.setAccessKeyId("");
-            /**
-             * 没有设备id
-             */
-            operate.setClientCard("");
+            operate.setLanguageId(0);
+            operate.setClientIpV4(getIpAddr(requestOrigin));
 
 
             /************************* 鉴权模块开始 *************************/
@@ -320,5 +318,42 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
         public void setEnabled(boolean enabled) {
             this.enabled = enabled;
         }
+    }
+    public static String getIpAddr(ServerHttpRequest request) {
+        String ipAddress = null;
+        try {
+            ipAddress = request.getHeaders().getFirst("x-forwarded-for");
+            if (ipAddress == null || ipAddress.length() == 0 || "unknown".equalsIgnoreCase(ipAddress)) {
+                ipAddress = request.getHeaders().getFirst("Proxy-Client-IP");
+            }
+            if (ipAddress == null || ipAddress.length() == 0 || "unknown".equalsIgnoreCase(ipAddress)) {
+                ipAddress = request.getHeaders().getFirst("WL-Proxy-Client-IP");
+            }
+            if (ipAddress == null || ipAddress.length() == 0 || "unknown".equalsIgnoreCase(ipAddress)) {
+                ipAddress = request.getRemoteAddress().getHostString();
+                if (ipAddress.equals("127.0.0.1")) {
+                    // 根据网卡取本机配置的IP
+                    InetAddress inet = null;
+                    try {
+                        inet = InetAddress.getLocalHost();
+                    } catch (UnknownHostException e) {
+                        e.printStackTrace();
+                    }
+                    ipAddress = inet.getHostAddress();
+                }
+            }
+            // 对于通过多个代理的情况，第一个IP为客户端真实IP,多个IP按照','分割
+            if (ipAddress != null && ipAddress.length() > 15) { // "***.***.***.***".length()
+                // = 15
+                if (ipAddress.indexOf(",") > 0) {
+                    ipAddress = ipAddress.substring(0, ipAddress.indexOf(","));
+                }
+            }
+        } catch (Exception e) {
+            ipAddress="";
+        }
+        // ipAddress = this.getRequest().getRemoteAddr();
+
+        return ipAddress;
     }
 }

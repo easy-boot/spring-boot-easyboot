@@ -49,6 +49,7 @@ public class Authorization {
             try {
                 authorization = Jackson.getObjectMapper().readValue(infoStr, Authorization.class);
             }catch (Exception e){
+                // todo
                 System.out.println(e);
             }
         }
