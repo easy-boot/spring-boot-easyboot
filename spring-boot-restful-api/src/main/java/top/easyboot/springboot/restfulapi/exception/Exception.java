@@ -9,7 +9,7 @@ import java.lang.reflect.Modifier;
 import java.util.HashMap;
 
 public class Exception extends java.lang.Exception {
-    private int statsCode = 0;
+    private int statsCode = 400;
     private HashMap messageData;
     private RestfulApiException restfulApiException;
     private static int lastExceptionId = 0;
