@@ -24,7 +24,7 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
 
     public AuthorizationInterceptor(ApplicationContext context) {
         applicationContext = context;
-        //获取@JalorOperation注解的所有bean
+        //获取@EnableAuthorization注解的所有bean
         EnableAuthorization enableAuthorization = null;
         for (String className : context.getBeanNamesForAnnotation(EnableAuthorization.class)) {
             Object app = context.getBean(className);

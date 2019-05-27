@@ -87,7 +87,7 @@ public class Exception extends java.lang.Exception {
     }
 
     protected void initExceptionIdMap(){
-        Field[] fields = this.getClass().getDeclaredFields();
+        Field[] fields = this.getClass().getFields();
         try {
             for (Field field : fields) {
                 field.setAccessible(true);

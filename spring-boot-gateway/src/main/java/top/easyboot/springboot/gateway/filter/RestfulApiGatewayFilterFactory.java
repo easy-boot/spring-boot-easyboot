@@ -50,44 +50,6 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
         super(Config.class);
         this.factory = factory;
     }
-    /**
-     * 合并传入uid和授权信息存储处理工厂
-     * @param factory
-     */
-    public RestfulApiGatewayFilterFactory(UidStorageFactory factory) {
-        this(new Factory() {
-            Client client = new Client(factory);
-            @Override
-            public Authorization getAuthorization(AuthorizationInput authorizationInput) throws AuthSignException {
-                return client.getAuthorization(authorizationInput);
-            }
-
-            @Override
-            public int getUid(String accessKeyId) {
-                return factory.getUid(accessKeyId);
-            }
-        });
-    }
-
-    /**
-     * 独立传入uid和授权信息存储处理工厂
-     * @param uidFactory
-     * @param storage
-     */
-    public RestfulApiGatewayFilterFactory(UidFactory uidFactory, Client.Storage storage) {
-        this(new Factory() {
-            Client client = new Client(storage);
-            @Override
-            public Authorization getAuthorization(AuthorizationInput authorizationInput) throws AuthSignException {
-                return client.getAuthorization(authorizationInput);
-            }
-
-            @Override
-            public int getUid(String accessKeyId) {
-                return uidFactory.getUid(accessKeyId);
-            }
-        });
-    }
 
     public String getAuthSignHeadersPrefix() {
         return authSignHeadersPrefix;
@@ -115,6 +77,9 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
 
     @Override
     public GatewayFilter apply(Config config) {
+        if (factory == null){
+            return (exchange, chain) -> chain.filter(exchange);
+        }
         return (exchangeOrigin, chain) -> {
             // todo
             System.out.println(config);
@@ -277,6 +242,7 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
                     /**
                      * 直接返回buffer
                      */
+                    response.getHeaders().set("Content-Length", String.valueOf(bits.length));
                     return response.writeWith(Mono.just(buffer));
                 }
                 /**
