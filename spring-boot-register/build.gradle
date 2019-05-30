@@ -1,6 +1,4 @@
 dependencies{
-    compile project(':spring-boot-operate')
-    compile project(':spring-boot-authorization')
     compileOnly "org.springframework.boot:spring-boot-starter-websocket"
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 }
@@ -12,7 +10,7 @@ jar {
     manifest {
         attributes(
                 'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
-                'Main-Class': 'top.easyboot.springboot.gateway.Application'
+                'Main-Class': 'top.easyboot.springboot.regregisterister.Application'
         )
     }
 }

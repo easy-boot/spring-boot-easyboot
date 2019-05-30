@@ -1,4 +1,4 @@
-package top.easyboot.springboot.gateway.property;
+package top.easyboot.springboot.register.property;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -14,6 +14,10 @@ public class WebSocketRegisterProperties {
      * 秘钥
      */
     private String secretKey;
+    /**
+     * 长连接地址
+     */
+    private String serverEndpoint = "/easyboot-register";
 
     public boolean isEnabled() {
         return enabled;
@@ -29,5 +33,13 @@ public class WebSocketRegisterProperties {
 
     public void setSecretKey(String secretKey) {
         this.secretKey = secretKey;
+    }
+
+    public String getServerEndpoint() {
+        return serverEndpoint;
+    }
+
+    public void setServerEndpoint(String serverEndpoint) {
+        this.serverEndpoint = serverEndpoint;
     }
 }
