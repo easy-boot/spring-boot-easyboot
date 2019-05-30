@@ -2,23 +2,26 @@ package top.easyboot.springboot.gateway.configuration;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.AnnotationUtils;
 import top.easyboot.springboot.authorization.component.Client;
 import top.easyboot.springboot.authorization.entity.Authorization;
 import top.easyboot.springboot.authorization.entity.AuthorizationInput;
 import top.easyboot.springboot.authorization.exception.AuthSignException;
-import top.easyboot.springboot.gateway.annotation.EnableRestfulApiFilter;
 import top.easyboot.springboot.gateway.filter.RestfulApiGatewayFilterFactory;
 import top.easyboot.springboot.gateway.filter.RestfulApiGatewayFilterFactory.Factory;
 import top.easyboot.springboot.gateway.filter.RestfulApiGatewayFilterFactory.UidFactory;
 import top.easyboot.springboot.gateway.filter.RestfulApiGatewayFilterFactory.UidStorageFactory;
+import top.easyboot.springboot.gateway.property.RestfulApiFilterProperties;
 
 @Configuration
-public class RestfulApiFilterConfigurer implements ApplicationContextAware {
+@EnableConfigurationProperties(RestfulApiFilterProperties.class)
+@ConditionalOnProperty(name = "easyboot.gateway.restfulapi.enabled", matchIfMissing = true)
+public class RestfulApiFilterConfiguration implements ApplicationContextAware {
     // Spring应用上下文环境
     private static ApplicationContext context;
     @Override
@@ -27,21 +30,7 @@ public class RestfulApiFilterConfigurer implements ApplicationContextAware {
     }
     @Bean
     public RestfulApiGatewayFilterFactory restfulApiGatewayFilterFactory(){
-
-        //获取@EnableRestfulApi注解的所有bean
-        EnableRestfulApiFilter enableRestfulApi = null;
-        for (String className : context.getBeanNamesForAnnotation(EnableRestfulApiFilter.class)) {
-            Object app = context.getBean(className);
-            if (app!= null && app instanceof Object){
-                enableRestfulApi = AnnotationUtils.findAnnotation(app.getClass(), EnableRestfulApiFilter.class);
-                if (enableRestfulApi !=null){
-                    break;
-                }
-            }
-        }
-        RestfulApiGatewayFilterFactory filterFactory = new RestfulApiGatewayFilterFactory(getRestfulApiFactory());
-        filterFactory.setAuthSignHeadersPrefix(enableRestfulApi.authSignHeadersPrefix());
-        return filterFactory;
+        return new RestfulApiGatewayFilterFactory(getRestfulApiFactory());
     }
     public Factory getRestfulApiFactory(){
         try {

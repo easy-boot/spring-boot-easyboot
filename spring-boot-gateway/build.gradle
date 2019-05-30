@@ -1,6 +1,7 @@
 dependencies{
     compile project(':spring-boot-operate')
     compile project(':spring-boot-authorization')
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 }
 jar {
     enabled = true

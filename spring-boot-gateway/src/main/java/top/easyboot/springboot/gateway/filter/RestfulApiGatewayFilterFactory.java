@@ -2,6 +2,7 @@ package top.easyboot.springboot.gateway.filter;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
@@ -15,6 +16,7 @@ import top.easyboot.springboot.authorization.component.Client;
 import top.easyboot.springboot.authorization.entity.Authorization;
 import top.easyboot.springboot.authorization.entity.AuthorizationInput;
 import top.easyboot.springboot.authorization.exception.AuthSignException;
+import top.easyboot.springboot.gateway.property.RestfulApiFilterProperties;
 import top.easyboot.springboot.operate.entity.Operate;
 
 import java.net.InetAddress;
@@ -23,25 +25,13 @@ import java.nio.charset.StandardCharsets;
 import org.springframework.core.io.buffer.DataBuffer;
 import top.easyboot.springboot.restfulapi.entity.RestfulApiException;
 
-import javax.servlet.http.HttpServletRequest;
 
 @Component
 public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory<RestfulApiGatewayFilterFactory.Config> {
     private Factory factory;
-    /**
-     * 操作者头信息key
-     */
-    private String operateHeaderKey = "x-easyboot-operate-info";
-    /**
-     * 授权签名头信息key
-     */
-    private String authSignHeaderKey = "x-easyboot-authorization";
-    /**
-     * 授权头前缀
-     */
-    private String authSignHeadersPrefix = "x-easycms-";
     private static final Log logger = LogFactory.getLog(RestfulApiGatewayFilterFactory.class);
-
+    @Autowired
+    private RestfulApiFilterProperties properties;
     /**
      * 原始处理工厂
      * @param factory
@@ -51,29 +41,6 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
         this.factory = factory;
     }
 
-    public String getAuthSignHeadersPrefix() {
-        return authSignHeadersPrefix;
-    }
-
-    public void setAuthSignHeadersPrefix(String authSignHeadersPrefix) {
-        this.authSignHeadersPrefix = authSignHeadersPrefix;
-    }
-
-    public String getOperateHeaderKey() {
-        return operateHeaderKey;
-    }
-
-    public void setOperateHeaderKey(String operateHeaderKey) {
-        this.operateHeaderKey = operateHeaderKey;
-    }
-
-    public String getAuthSignHeaderKey() {
-        return authSignHeaderKey;
-    }
-
-    public void setAuthSignHeaderKey(String authSignHeaderKey) {
-        this.authSignHeaderKey = authSignHeaderKey;
-    }
 
     @Override
     public GatewayFilter apply(Config config) {
@@ -99,7 +66,7 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
             /**
              * 清理操作者信息，防止注入
              */
-            requestBuilder.headers(httpHeaders -> httpHeaders.remove(operateHeaderKey).remove(authSignHeaderKey));
+            requestBuilder.headers(httpHeaders -> httpHeaders.remove(properties.getOperateHeaderKey()).remove(properties.getAuthSignHeaderKey()));
             /**
              * 实例化一个操作信息对象
              */
@@ -133,7 +100,7 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
             /**
              * 授权头签字
              */
-            ai.setAuthSignHeadersPrefix(authSignHeadersPrefix);
+            ai.setAuthSignHeadersPrefix(properties.getAuthSignHeaderPrefix());
 
             /**
              * 先定义一个变量来接收授权数据
@@ -191,11 +158,11 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
             /**
              * 序列化操作者信息并且设置到请求构建器中
              */
-            requestBuilder.header(operateHeaderKey, operate.toString());
+            requestBuilder.header(properties.getOperateHeaderKey(), operate.toString());
             /**
              * authorization信息
              */
-            requestBuilder.header(authSignHeaderKey, authorization.toString());
+            requestBuilder.header(properties.getAuthSignHeaderKey(), authorization.toString());
             /**
              * 构建请求对象，并且构建一个exchange传递到下一个过滤器
              */
