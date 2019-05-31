@@ -1,2 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-top.easyboot.springboot.register.configuration.WebSocketRegisterConfiguration

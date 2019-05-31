@@ -1,0 +1,17 @@
+dependencies{
+    compile project(':spring-boot-operate')
+    compile project(':spring-boot-authorization')
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+}
+jar {
+    enabled = true
+    version = rootProject.getVersion()
+    // 不希望打包进去
+    //from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    manifest {
+        attributes(
+                'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+                'Main-Class': 'top.easyboot.springboot.restfulapi.gateway.Application'
+        )
+    }
+}

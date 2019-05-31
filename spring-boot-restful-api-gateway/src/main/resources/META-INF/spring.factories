@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+top.easyboot.springboot.restfulapi.gateway.configuration.RestfulApiFilterConfiguration,\
+top.easyboot.springboot.restfulapi.gateway.configuration.WebSocketGatewayConfiguration

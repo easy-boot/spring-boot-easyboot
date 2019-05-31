@@ -1,4 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-top.easyboot.springboot.gateway.configuration.RestfulApiFilterConfiguration,\
-top.easyboot.springboot.gateway.configuration.WebSocketGatewayConfiguration,\
-top.easyboot.springboot.register.configuration.WebSocketRegisterConfiguration
