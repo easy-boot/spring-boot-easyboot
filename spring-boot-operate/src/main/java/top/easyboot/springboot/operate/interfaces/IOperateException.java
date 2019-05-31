@@ -1,4 +1,4 @@
-package top.easyboot.springboot.operate.interceptor;
+package top.easyboot.springboot.operate.interfaces;
 
 import top.easyboot.springboot.restfulapi.annotation.ExampleMessage;
 import static top.easyboot.springboot.restfulapi.exception.Exception.id;

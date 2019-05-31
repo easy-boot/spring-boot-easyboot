@@ -21,11 +21,19 @@ import org.springframework.web.client.RestTemplate;
 import top.easyboot.springboot.restfulapi.gateway.core.WebSocketRestfulSession;
 import top.easyboot.springboot.restfulapi.gateway.property.WebSocketGatewayProperties;
 import top.easyboot.springboot.restfulapi.gateway.property.WebSocketGatewayProperties.RpcCall;
+import top.easyboot.springboot.restfulapi.util.ConnectionIdUtil;
 
 @Configuration
 @EnableConfigurationProperties(WebSocketGatewayProperties.class)
 @ConditionalOnProperty(prefix = "easyboot.restfulapi.gateway", name = {"enabled", "websocket.enabled"}, havingValue = "true")
 public class WebSocketGatewayConfiguration implements ApplicationListener<WebServerInitializedEvent> {
+    /**
+     * ping定时器
+     */
+    private Timer pingTimer;
+    /**
+     * 配置文件
+     */
     @Autowired
     private WebSocketGatewayProperties properties;
     /**
@@ -33,21 +41,35 @@ public class WebSocketGatewayConfiguration implements ApplicationListener<WebSer
      */
     private HashMap<String, WebSocketRestfulSession> sessions = new HashMap<>();
     /**
-     *
+     * 链接id前缀
      */
-    private Timer pingTimer;
+    private ConnectionIdUtil connectionIdUtil;
 
 
     @Bean
     @ConditionalOnMissingBean(name = "easybootRestfulApiWebSocketHandler")
     public WebSocketHandler easybootRestfulApiWebSocketHandler() {
 
+        connectionIdUtil = new ConnectionIdUtil(){
+            @Override
+            protected boolean isUseIng(String connectionId) {
+                return sessions.containsKey(connectionId);
+            }
+        };
+        connectionIdUtil.setConnectionIdPrefixByIpV4("127.0.0.1");
 
         RestTemplate restGateawyTemplate = new RestTemplate();
 
         return (final WebSocketSession session) -> {
-            String sid = session.getId();
+            String connectionId;
+            try {
+                connectionId = connectionIdUtil.generateConnectionId();
+            }catch (Throwable e){
+                return session.close();
+            }
 
+            System.out.println("connectionId");
+            System.out.println(connectionId);
 //            ResponseEntity<Object> exchange = restTemplate.exchange(serverUri+"/v1.0/api", HttpMethod.GET, new HttpEntity<>(null), Object.class);
 //
 //            System.out.println(exchange.getStatusCode());
@@ -55,19 +77,19 @@ public class WebSocketGatewayConfiguration implements ApplicationListener<WebSer
 //            System.out.println(exchange.getBody().toString());
 //            System.out.println(exchange.getHeaders().toSingleValueMap().toString());
 
-            WebSocketRestfulSession restfulSession = new WebSocketRestfulSession(session);
+            WebSocketRestfulSession restfulSession = new WebSocketRestfulSession(connectionId, session);
             restfulSession.onClose(()->{
-                if (sessions.containsKey(sid)){
-                    sessions.remove(sid);
+                if (sessions.containsKey(connectionId)){
+                    sessions.remove(connectionId);
                 }
             });
 
 
-            sessions.put(sid, restfulSession);
+            sessions.put(connectionId, restfulSession);
 
             return session.send(restfulSession.getFlux()).doAfterSuccessOrError((res, throwable)->{
-                if (sessions.containsKey(sid)){
-                    sessions.remove(sid);
+                if (sessions.containsKey(connectionId)){
+                    sessions.remove(connectionId);
                 }
                 if (throwable != null){
                     System.out.println("throwable");
@@ -78,8 +100,8 @@ public class WebSocketGatewayConfiguration implements ApplicationListener<WebSer
     }
     //每隔2秒执行一次
     protected void pingTaskRun() {
-        for (String sid : sessions.keySet()) {
-            sessions.get(sid).ping();
+        for (String connectionId : sessions.keySet()) {
+            sessions.get(connectionId).ping();
         }
     }
 

@@ -24,7 +24,6 @@ public abstract class WebSocketRestfulSessionBase {
     private final Flux<WebSocketMessage> flux = Flux.create(sink -> sinkInit(sink));
 
     abstract void onWebSocketMessage(WebSocketMessage webSocketMessage);
-    abstract void init();
     /**
      * 长连接会话
      * @param webSocketSession
@@ -36,7 +35,6 @@ public abstract class WebSocketRestfulSessionBase {
             e.printStackTrace();
             close();
         }, () -> close());
-        init();
     }
     public WebSocketSession getSession() {
         return session;

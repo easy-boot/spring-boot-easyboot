@@ -1,6 +1,6 @@
 package top.easyboot.springboot.operate.exception;
 
-import top.easyboot.springboot.operate.interceptor.IOperateException;
+import top.easyboot.springboot.operate.interfaces.IOperateException;
 import top.easyboot.springboot.restfulapi.exception.Exception;
 
 

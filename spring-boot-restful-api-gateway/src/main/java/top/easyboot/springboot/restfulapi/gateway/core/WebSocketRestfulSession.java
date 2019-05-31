@@ -7,10 +7,12 @@ import org.springframework.web.reactive.socket.WebSocketSession;
 import java.util.Date;
 
 public class WebSocketRestfulSession extends WebSocketRestfulSessionBase {
-    public WebSocketRestfulSession(WebSocketSession webSocketSession){
+    private String connectionId;
+    public WebSocketRestfulSession(String connectionId, WebSocketSession webSocketSession){
         super(webSocketSession);
+        this.connectionId = connectionId;
+        init();
     }
-    @Override
     protected void init(){
 
     }
