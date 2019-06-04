@@ -1,8 +1,9 @@
 package top.easyboot.springboot.restfulapi.gateway.property;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
+
+import java.net.URL;
 
 @Component
 @ConfigurationProperties("easyboot.restfulapi.gateway.websocket")
@@ -22,11 +23,23 @@ public class WebSocketGatewayProperties {
     /**
      * default: same as non-Ordered
      */
-    private Integer order = null;
+    private Integer order;
     /**
-     * rpc调用信息
+     * 链接id前缀
      */
-    private RpcCall rpcCall;
+    private String connectionIdPrefix;
+    /**
+     * 远程调用基本地址
+     */
+    private URL restfulBaseUrl;
+    /**
+     * 请求id的头的key
+     */
+    private String requestIdKey = "x-request-id";
+    /**
+     * 链接id的头的key
+     */
+    private String connectionIdKey = "x-easyboot-connection-id";
 
     public boolean isEnabled() {
         return enabled;
@@ -60,40 +73,35 @@ public class WebSocketGatewayProperties {
         this.order = order;
     }
 
-    public RpcCall getRpcCall() {
-        return rpcCall;
+    public String getConnectionIdPrefix() {
+        return connectionIdPrefix;
     }
 
-    public void setRpcCall(RpcCall rpcCall) {
-        this.rpcCall = rpcCall;
+    public void setConnectionIdPrefix(String connectionIdPrefix) {
+        this.connectionIdPrefix = connectionIdPrefix;
     }
 
-    public static class RpcCall{
-        /**
-         * 远程调用网关代理端口
-         * 默认，本网关的启动端口
-         */
-        private int port = 0;
-        /**
-         * 远程调用网关代理地址
-         * 默认自动获取，当前网关的ip地址
-         */
-        private String address;
+    public URL getRestfulBaseUrl() {
+        return restfulBaseUrl;
+    }
 
-        public int getPort() {
-            return port;
-        }
+    public void setRestfulBaseUrl(URL restfulBaseUrl) {
+        this.restfulBaseUrl = restfulBaseUrl;
+    }
 
-        public void setPort(int port) {
-            this.port = port;
-        }
+    public String getRequestIdKey() {
+        return requestIdKey;
+    }
 
-        public String getAddress() {
-            return address;
-        }
+    public void setRequestIdKey(String requestIdKey) {
+        this.requestIdKey = requestIdKey;
+    }
 
-        public void setAddress(String address) {
-            this.address = address;
-        }
+    public String getConnectionIdKey() {
+        return connectionIdKey;
+    }
+
+    public void setConnectionIdKey(String connectionIdKey) {
+        this.connectionIdKey = connectionIdKey;
     }
 }

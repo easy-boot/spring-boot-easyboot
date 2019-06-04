@@ -1,38 +1,137 @@
 package top.easyboot.springboot.restfulapi.gateway.core;
 
-
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.lang.Nullable;
+import org.springframework.web.reactive.socket.HandshakeInfo;
 import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
+import reactor.core.Disposable;
+import reactor.core.Disposables;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
 
+import java.net.InetSocketAddress;
+import java.net.URI;
 import java.util.Date;
+import java.util.function.Function;
 
-public class WebSocketRestfulSession extends WebSocketRestfulSessionBase {
-    private String connectionId;
-    public WebSocketRestfulSession(String connectionId, WebSocketSession webSocketSession){
-        super(webSocketSession);
-        this.connectionId = connectionId;
-        init();
-    }
-    protected void init(){
+public class WebSocketRestfulSession {
 
-    }
-    public void ping(){
-        long time = new Date().getTime()/1000;
-        System.out.println("定时任务执行时间：" + time);
-        textMessage("time:"+time);
-    }
-    @Override
-    protected void onWebSocketMessage(WebSocketMessage webSocketMessage){
+    /**
+     * 最后更新时间
+     */
+    private Date updateAt;
+    private WebSocketSession session;
+    private FluxSink<WebSocketMessage> sink;
+    private final Disposable.Composite compositeClose = Disposables.composite();
+    private final Flux<WebSocketMessage> flux = Flux.create(sink -> sinkInit(sink));
 
-        System.out.println("ss");
-        System.out.println(webSocketMessage.getType());
-        String aa = webSocketMessage.getPayloadAsText();
-        System.out.println(aa);
-        System.out.println(webSocketMessage.getPayloadAsText());
-        if (aa.equals("close1")){
+    /**
+     * 长连接会话
+     * @param webSocketSession
+     */
+    public WebSocketRestfulSession(WebSocketSession webSocketSession){
+        session = webSocketSession;
+        updateAt = new Date();
+    }
+    public WebSocketSession getSession() {
+        return session;
+    }
+    public Flux<WebSocketMessage> getFlux(){
+        return flux;
+    }
+
+    public FluxSink<WebSocketMessage> getSink() {
+        return sink;
+    }
+
+    private void sinkInit(FluxSink<WebSocketMessage> sink){
+        this.sink = sink.onCancel(()-> close()).onDispose(()-> close());
+    }
+    public boolean isClose(){
+        boolean is = sink==null || sink.isCancelled();
+        if (is){
             close();
-        }else{
-            this.textMessage("sss+++:"+aa);
         }
+        return is;
     }
+    public WebSocketRestfulSession onClose(Disposable d){
+        compositeClose.add(d);
+        return this;
+    }
+    public WebSocketRestfulSession close(){
+        compositeClose.dispose();
+        try {
+            sink.complete();
+        }catch (Throwable e){
+
+        }
+        try {
+            session.close();
+        }catch (Throwable e){
+
+        }
+
+        return this;
+    }
+    public WebSocketRestfulSession textMessage(String message){
+        if (!isClose()){
+            sink.next(session.textMessage(message));
+        }
+        return this;
+    }
+    public WebSocketRestfulSession binaryMessage(Function<DataBufferFactory, DataBuffer> payloadFactory){
+        if (!isClose()){
+            sink.next(session.binaryMessage(payloadFactory));
+        }
+        return this;
+    }
+    public WebSocketRestfulSession pingMessage(Function<DataBufferFactory, DataBuffer> payloadFactory){
+        if (!isClose()){
+            sink.next(session.pingMessage(payloadFactory));
+        }
+        return this;
+    }
+    public WebSocketRestfulSession pongMessage(Function<DataBufferFactory, DataBuffer> payloadFactory){
+        if (!isClose()){
+            sink.next(session.pongMessage(payloadFactory));
+        }
+        return this;
+    }
+
+    public Date getUpdateAt() {
+        return updateAt;
+    }
+
+    public void setUpdateAt(Date updateAt) {
+        this.updateAt = updateAt;
+    }
+    /**
+     * Return information from the handshake request.
+     * @return handshake request
+     */
+    public HandshakeInfo getHandshakeInfo(){
+        return session.getHandshakeInfo();
+    }
+    @Nullable
+    public InetSocketAddress getRemoteAddress(){
+        return getHandshakeInfo().getRemoteAddress();
+    }
+    /**
+     * Return the URL for the WebSocket endpoint.
+     */
+    public URI getUri() {
+        return getHandshakeInfo().getUri();
+    }
+
+    /**
+     * Return the handshake HTTP headers. Those are the request headers for a
+     * server session and the response headers for a client session.
+     */
+    public HttpHeaders getHeaders() {
+        return getHandshakeInfo().getHeaders();
+    }
+
 }
