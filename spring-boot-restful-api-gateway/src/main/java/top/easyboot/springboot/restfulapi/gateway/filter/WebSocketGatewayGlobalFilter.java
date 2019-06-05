@@ -9,11 +9,17 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import top.easyboot.springboot.restfulapi.gateway.property.WebSocketGatewayProperties;
+import top.easyboot.springboot.restfulapi.gateway.service.WebSocketGatewaySessionService;
 
 @Component
 public class WebSocketGatewayGlobalFilter implements GlobalFilter, Ordered {
     @Autowired(required = false)
     private WebSocketGatewayProperties properties;
+    /**
+     * 会话连接池
+     */
+    @Autowired
+    protected WebSocketGatewaySessionService sessionService;
     public final static String ATTRIBUTE_IGNORE_TEST_GLOBAL_FILTER = "@ignoreWebSocketGatewayGlobalFilter";
 
     @Override
@@ -23,12 +29,17 @@ public class WebSocketGatewayGlobalFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
         ServerHttpRequest serverHttpRequest = exchange.getRequest();
-        String connectionId = serverHttpRequest.getHeaders().getFirst(properties.getConnectionIdPrefix());
+        String connectionId = serverHttpRequest.getHeaders().getFirst(properties.getConnectionIdKey());
         if (connectionId == null || connectionId.isEmpty()){
             return chain.filter(exchange);
         }
-        System.out.println("connectionId");
-        System.out.println(connectionId);
+        if (!sessionService.containsKey(connectionId)){
+            ServerHttpRequest request = exchange.getRequest().mutate()
+                    .headers(httpHeaders -> httpHeaders.remove(properties.getConnectionIdKey()))
+                    .build();
+
+            return chain.filter(exchange.mutate().request(request).build());
+        }
         return chain.filter(exchange);
     }
 

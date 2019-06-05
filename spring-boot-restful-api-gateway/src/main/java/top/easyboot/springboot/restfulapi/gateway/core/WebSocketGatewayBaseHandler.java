@@ -1,7 +1,6 @@
 package top.easyboot.springboot.restfulapi.gateway.core;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.HandlerMapping;
@@ -11,6 +10,7 @@ import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.WebSocketGatewayIHandler;
 import top.easyboot.springboot.restfulapi.gateway.property.WebSocketGatewayProperties;
+import top.easyboot.springboot.restfulapi.gateway.service.WebSocketGatewaySessionService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,7 +27,8 @@ public abstract class WebSocketGatewayBaseHandler implements WebSocketGatewayIHa
     /**
      * 会话连接池
      */
-    protected Map<String, WebSocketRestfulSession> sessions = new HashMap<>();
+    @Autowired
+    protected WebSocketGatewaySessionService sessionService;
 
     /**
      * 初始化
@@ -48,7 +49,7 @@ public abstract class WebSocketGatewayBaseHandler implements WebSocketGatewayIHa
      * @return
      */
     public boolean containsConnectionId(String connectionId) {
-        return sessions.containsKey(connectionId);
+        return sessionService.containsKey(connectionId);
     }
 
     /**
@@ -101,7 +102,7 @@ public abstract class WebSocketGatewayBaseHandler implements WebSocketGatewayIHa
                 return session.close();
             }
 
-            WebSocketRestfulSession restfulSession = new WebSocketRestfulSession(session);
+            WebSocketRestfulSession restfulSession = sessionService.createSession(connectionId, session);
 
             session.receive().subscribe(message-> onWebSocketMessage(connectionId, message), e->{
                 e.printStackTrace();
@@ -109,17 +110,15 @@ public abstract class WebSocketGatewayBaseHandler implements WebSocketGatewayIHa
             }, () -> restfulSession.close());
 
             restfulSession.onClose(()->{
-                if (sessions.containsKey(connectionId)){
-                    sessions.remove(connectionId);
+                if (sessionService.containsKey(connectionId)){
+                    sessionService.remove(connectionId);
                 }
             });
 
 
-            sessions.put(connectionId, restfulSession);
-
             return session.send(restfulSession.getFlux()).doAfterSuccessOrError((res, throwable)->{
-                if (sessions.containsKey(connectionId)){
-                    sessions.remove(connectionId);
+                if (sessionService.containsKey(connectionId)){
+                    sessionService.remove(connectionId);
                 }
                 if (throwable != null){
                     System.out.println("throwable");

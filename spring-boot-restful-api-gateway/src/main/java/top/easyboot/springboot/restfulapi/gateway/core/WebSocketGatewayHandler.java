@@ -27,7 +27,7 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
         System.out.println(connectionId);
         System.out.println(message);
         if (isRowRawEntityAndHandler(connectionId, message)){
-            sessions.get(connectionId).setUpdateAt(new Date());
+            sessionService.get(connectionId).setUpdateAt(new Date());
             return;
         }
         System.out.println("webSocketMessage");
@@ -35,10 +35,10 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
     }
     private void response(String connectionId, String requestId, HttpResponse response, Throwable e, WebSocketMessage.Type type){
 
-        if (!sessions.containsKey(connectionId)){
+        if (!sessionService.containsKey(connectionId)){
             return;
         }
-        WebSocketRestfulSession session = sessions.get(connectionId);
+        WebSocketRestfulSession session = sessionService.get(connectionId);
         RowRawEntity resEntity = new RowRawEntity();
         resEntity.setProtocol("EASYBOOTRESTFUL/1.0");
 
@@ -58,7 +58,7 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
 
             try {
                 HttpEntity httpEntity = response.getEntity();
-                byte[] content = new byte[(int)httpEntity.getContentLength()];
+                byte[] content = new byte[httpEntity.getContent().available()];
                 httpEntity.getContent().read(content);
                 resEntity.setBody(content);
             }catch (IOException e1){

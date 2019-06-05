@@ -24,8 +24,8 @@ public abstract class WebSocketGatewayPingHandler extends WebSocketGatewayBaseHa
      */
     protected void ping() {
         long now = new Date().getTime()/1000;
-        for (String connectionId : sessions.keySet()) {
-            WebSocketRestfulSession session = sessions.get(connectionId);
+        for (String connectionId : sessionService.keySet()) {
+            WebSocketRestfulSession session = sessionService.get(connectionId);
             long interval = now - (session.getUpdateAt().getTime()/1000);
             if (interval>45){
                 RowRawEntity rawEntity = new RowRawEntity();

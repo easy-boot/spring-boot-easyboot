@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.server.support.WebSocketHandlerAdapter;
@@ -13,9 +14,11 @@ import top.easyboot.springboot.restfulapi.gateway.core.WebSocketGatewayHandler;
 import top.easyboot.springboot.restfulapi.gateway.filter.WebSocketGatewayGlobalFilter;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.WebSocketGatewayIHandler;
 import top.easyboot.springboot.restfulapi.gateway.property.WebSocketGatewayProperties;
+import top.easyboot.springboot.restfulapi.gateway.service.WebSocketGatewaySessionService;
 
 @Configuration
 @EnableConfigurationProperties(WebSocketGatewayProperties.class)
+@Import(WebSocketGatewaySessionService.class)
 @ConditionalOnProperty(prefix = "easyboot.restfulapi.gateway", name = {"enabled", "websocket.enabled"}, havingValue = "true")
 public class WebSocketGatewayConfiguration  {
     @Bean
@@ -30,7 +33,6 @@ public class WebSocketGatewayConfiguration  {
     }
 
     @Bean
-    @ConditionalOnBean(WebSocketGatewayIHandler.class)
     public WebSocketGatewayGlobalFilter webSocketGatewayGlobalFilter(){
         return new WebSocketGatewayGlobalFilter();
     }

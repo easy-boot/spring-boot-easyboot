@@ -23,6 +23,7 @@ public class Application {
         System.out.println("==6:"+ ConnectionIdUtil.hexToIpv4("1124121"));
         System.out.println("==8:"+ ConnectionIdUtil.ipV4ToHex("0.0.0.1"));
         System.out.println("==8:"+ ConnectionIdUtil.hexToIpv4("00000001"));
+        System.out.println("==8:"+  ConnectionIdUtil.parse("40a030310000003"));
 //        int aa = (255 * 65535) ;
 //        String aaaa = "";
 //        try {
