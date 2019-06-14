@@ -21,18 +21,53 @@ import java.net.*;
 import java.util.*;
 
 public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler implements WebSocketGatewayIHandler, ApplicationListener<WebServerInitializedEvent> {
-
+    /**
+     * 定时器
+     */
+    private Timer taskTimer;
+    private String restfulProtocol = "EASYBOOTRESTFUL";
+    private final String pingPath = "/ping";
     @Override
     protected void onWebSocketMessage(String connectionId, WebSocketMessage message) {
-        System.out.println(connectionId);
-        System.out.println(message);
         if (isRowRawEntityAndHandler(connectionId, message)){
             sessionService.get(connectionId).setUpdateAt(new Date());
             return;
         }
-        System.out.println("webSocketMessage");
-        System.out.println(message);
     }
+
+    @Override
+    protected void init() {
+        super.init();
+        // 启动定时器
+        taskInit();
+    }
+    @Override
+    public void requestBindUser(String connectionId) {
+        // ping
+        RowRawEntity rawEntity = new RowRawEntity();
+        rawEntity.setProtocol(signalProtocol);
+        rawEntity.setMethod(SIGNAL);
+        rawEntity.setPath("/bind/user");
+        if (sessionService.containsKey(connectionId)){
+            sessionService.get(connectionId).textMessage(new String(RowRawUtil.stringify(rawEntity)));
+        }
+    }
+    /**
+     * 处理心跳问题
+     */
+    protected void taskRun() {
+        long now = new Date().getTime()/1000;
+        for (String connectionId : sessionService.keySet()) {
+            WebSocketRestfulSession session = sessionService.get(connectionId);
+            long pingInterval = now - (session.getUpdateAt().getTime()/1000);
+            if (pingInterval>45){
+                ping(connectionId);
+            } else if (pingInterval>60*5){
+                session.close();
+            }
+        }
+    }
+
     private void response(String connectionId, String requestId, HttpResponse response, Throwable e, WebSocketMessage.Type type){
 
         if (!sessionService.containsKey(connectionId)){
@@ -40,7 +75,7 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
         }
         WebSocketRestfulSession session = sessionService.get(connectionId);
         RowRawEntity resEntity = new RowRawEntity();
-        resEntity.setProtocol("EASYBOOTRESTFUL/1.0");
+        resEntity.setProtocol(restfulProtocol);
 
         if (response != null){
             StatusLine statusLine = response.getStatusLine();
@@ -97,74 +132,80 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
         }
         String method = entity.getMethod();
         String status = entity.getStatus();
-        Map<String, String> headers = entity.getHeaders();
-        headers.put(properties.getConnectionIdKey(), connectionId);
-        String requestId = getRequestId(entity.getHeaders());
         if (method!=null){
-            System.out.println(entity.getPath());
-            System.out.println(entity.getMethod());
-
-
-            URL baseUrl = properties.getRestfulBaseUrl();
-
-            //构造请求
-            HttpEntityEnclosingRequestBase httpRequest = new HttpEntityEnclosingRequestBase() {
-                @Override
-                public String getMethod() {
-                    return method;
+            if (restfulProtocol.equals(entity.getProtocol())){
+                rpcApi(entity, connectionId, type);
+            }else if (signalProtocol.equals(entity.getProtocol())){
+                // 如果是一个ping
+                if (SIGNAL.equals(entity.getMethod()) && pingPath.equals(entity.getPath())){
+                    // 调用pong回应
+                    pong(connectionId);
                 }
-            };
-
-            try {
-                httpRequest.setURI(new URL(baseUrl.getProtocol(), baseUrl.getHost(), baseUrl.getPort(), entity.getPath()).toURI());
-            }catch (URISyntaxException e){
-                response(connectionId, requestId, null, e, type);
-            }catch (MalformedURLException e){
-                response(connectionId, requestId, null, e, type);
             }
-            if (headers != null && !headers.isEmpty()){
-                List<Header> headerList = new ArrayList<>();
-                for (String name : headers.keySet()) {
-                    if (name.toLowerCase().equals("content-length")){
-                        continue;
-                    }
-                    headerList.add(new BasicHeader(name, headers.get(name)));
-                }
-                Header[] headerArray = new Header[headerList.size()];
-                headerList.toArray(headerArray);
-                httpRequest.setHeaders(headerArray);
-            }
-            if (entity.getBody() !=null && entity.getBody().length>0){
-                httpRequest.setEntity(new ByteArrayEntity(entity.getBody()));
-            }
-
-
-            client.execute(httpRequest, new FutureCallback<HttpResponse>() {
-                @Override
-                public void completed(HttpResponse result) {
-                    response(connectionId, requestId, result, null, type);
-                }
-
-                @Override
-                public void failed(Exception e) {
-                    response(connectionId, requestId, null, e, type);
-                }
-
-                @Override
-                public void cancelled() {
-                    response(connectionId, requestId, null, new Exception("cancelled"), type);
-                }
-            });
 
         }else if (status!=null){
             System.out.println("响应");
 
         }
 
-
-
-
         return true;
+    }
+    protected void rpcApi(RowRawEntity entity, String connectionId, WebSocketMessage.Type type){
+        String method = entity.getMethod();
+        Map<String, String> headers = entity.getHeaders();
+
+        headers.put(properties.getConnectionIdKey(), connectionId);
+        String requestId = getRequestId(entity.getHeaders());
+        URL baseUrl = properties.getRestfulBaseUrl();
+
+        //构造请求
+        HttpEntityEnclosingRequestBase httpRequest = new HttpEntityEnclosingRequestBase() {
+            @Override
+            public String getMethod() {
+                return method;
+            }
+        };
+
+        try {
+            httpRequest.setURI(new URL(baseUrl.getProtocol(), baseUrl.getHost(), baseUrl.getPort(), entity.getPath()).toURI());
+        }catch (URISyntaxException e){
+            response(connectionId, requestId, null, e, type);
+        }catch (MalformedURLException e){
+            response(connectionId, requestId, null, e, type);
+        }
+        if (headers != null && !headers.isEmpty()){
+            List<Header> headerList = new ArrayList<>();
+            for (String name : headers.keySet()) {
+                if (name.toLowerCase().equals("content-length")){
+                    continue;
+                }
+                headerList.add(new BasicHeader(name, headers.get(name)));
+            }
+            Header[] headerArray = new Header[headerList.size()];
+            headerList.toArray(headerArray);
+            httpRequest.setHeaders(headerArray);
+        }
+        if (entity.getBody() !=null && entity.getBody().length>0){
+            httpRequest.setEntity(new ByteArrayEntity(entity.getBody()));
+        }
+
+
+        client.execute(httpRequest, new FutureCallback<HttpResponse>() {
+            @Override
+            public void completed(HttpResponse result) {
+                response(connectionId, requestId, result, null, type);
+            }
+
+            @Override
+            public void failed(Exception e) {
+                response(connectionId, requestId, null, e, type);
+            }
+
+            @Override
+            public void cancelled() {
+                response(connectionId, requestId, null, new Exception("cancelled"), type);
+            }
+        });
     }
     protected String getRequestId(Map<String, String> headers){
         String requestIdKey = properties.getRequestIdKey();
@@ -219,4 +260,19 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
         }
     }
 
+    protected void taskInit(){
+        try {
+            if (taskTimer!=null){
+                taskTimer.cancel();
+            }
+        }catch (Throwable e){
+        }
+        taskTimer = new Timer();
+        taskTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                taskRun();
+            }
+        }, new Date(), 5000);
+    }
 }

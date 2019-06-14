@@ -13,7 +13,6 @@ public abstract class WebSocketGatewayConnidHandler extends WebSocketGatewayPing
     private ConnectionIdUtil connectionIdUtil;
     @Override
     protected void init() {
-        super.init();
         // 初始化 链接id 前缀初始化
         connectionIdPrefixInit();
     }

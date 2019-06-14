@@ -41,7 +41,31 @@ public abstract class WebSocketGatewayBaseHandler implements WebSocketGatewayIHa
      * @throws Exception
      */
     protected abstract String generateConnectionId() throws Exception;
+
+    /**
+     * ping对方
+     * @param connectionId 连接id
+     */
+    protected abstract void ping(String connectionId);
+
+    /**
+     * pong对方
+     * @param connectionId 连接id
+     */
+    protected abstract void pong(String connectionId);
+
+    /**
+     * 收到信息
+     * @param connectionId
+     * @param message
+     */
     protected abstract void onWebSocketMessage(String connectionId, WebSocketMessage message);
+
+    /**
+     * 请求客户端绑定用户信息
+     * @param connectionId 连接id
+     */
+    public abstract void requestBindUser(String connectionId);
 
     /**
      * 判断连接id是否存在
