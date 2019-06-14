@@ -65,7 +65,7 @@ public abstract class WebSocketGatewayBaseHandler implements WebSocketGatewayIHa
      * 请求客户端绑定用户信息
      * @param connectionId 连接id
      */
-    public abstract void requestBindUser(String connectionId);
+    public abstract void pingAuth(String connectionId);
 
     /**
      * 判断连接id是否存在
@@ -127,6 +127,8 @@ public abstract class WebSocketGatewayBaseHandler implements WebSocketGatewayIHa
             }
 
             WebSocketRestfulSession restfulSession = sessionService.createSession(connectionId, session);
+            // 试图ping一次授权
+            pingAuth(connectionId);
 
             session.receive().subscribe(message-> onWebSocketMessage(connectionId, message), e->{
                 e.printStackTrace();

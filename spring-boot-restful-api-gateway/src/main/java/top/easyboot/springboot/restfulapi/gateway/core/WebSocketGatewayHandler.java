@@ -42,12 +42,12 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
         taskInit();
     }
     @Override
-    public void requestBindUser(String connectionId) {
+    public void pingAuth(String connectionId) {
         // ping
         RowRawEntity rawEntity = new RowRawEntity();
         rawEntity.setProtocol(signalProtocol);
         rawEntity.setMethod(SIGNAL);
-        rawEntity.setPath("/bind/user");
+        rawEntity.setPath("/ping/auth");
         if (sessionService.containsKey(connectionId)){
             sessionService.get(connectionId).textMessage(new String(RowRawUtil.stringify(rawEntity)));
         }
@@ -64,6 +64,11 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
                 ping(connectionId);
             } else if (pingInterval>60*5){
                 session.close();
+                continue;
+            }
+            // 每2分钟刷新一次授权信息
+            if ((now - (session.getAuthAccessAt().getTime()/1000))>120){
+                pingAuth(connectionId);
             }
         }
     }

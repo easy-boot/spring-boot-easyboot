@@ -23,6 +23,10 @@ public class WebSocketRestfulSession {
      * 最后更新时间
      */
     private Date updateAt;
+    /**
+     * 授权更新时间
+     */
+    private Date authAccessAt;
     private WebSocketSession session;
     private FluxSink<WebSocketMessage> sink;
     private final Disposable.Composite compositeClose = Disposables.composite();
@@ -108,6 +112,15 @@ public class WebSocketRestfulSession {
     public void setUpdateAt(Date updateAt) {
         this.updateAt = updateAt;
     }
+
+    public Date getAuthAccessAt() {
+        return authAccessAt;
+    }
+
+    public void setAuthAccessAt(Date authAccessAt) {
+        this.authAccessAt = authAccessAt;
+    }
+
     /**
      * Return information from the handshake request.
      * @return handshake request
