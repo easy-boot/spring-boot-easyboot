@@ -15,8 +15,8 @@ import top.easyboot.springboot.restfulapi.gateway.service.WebSocketGatewaySessio
 @Component
 public class WebSocketGatewayGlobalFilter implements GlobalFilter, Ordered {
     @Autowired(required = false)
-    private static RestfulApiGatewayProperties properties;
-    private static WebSocket webSocket;
+    private RestfulApiGatewayProperties properties;
+    private WebSocket webSocket;
     /**
      * 链接id的头的key
      */
@@ -49,6 +49,8 @@ public class WebSocketGatewayGlobalFilter implements GlobalFilter, Ordered {
 
         // 试图获取长连接的connectionId[连接id]
         String connectionId = serverHttpRequest.getHeaders().getFirst(getConnectionIdKey());
+        System.out.println("connectionId");
+        System.out.println(connectionId);
 
         // 如果没有找到连接id跳过
         if (connectionId == null || connectionId.isEmpty()){
@@ -75,7 +77,7 @@ public class WebSocketGatewayGlobalFilter implements GlobalFilter, Ordered {
      * @param exchange 交互数据
      * @return 是否需要过滤
      */
-    protected static boolean isEnabled(ServerWebExchange exchange){
+    protected boolean isEnabled(ServerWebExchange exchange){
         if (connectionIdHeaderKey == null || exchange.getAttribute(ATTRIBUTE_IGNORE_TEST_GLOBAL_FILTER) != null){
             return false;
         }
@@ -86,7 +88,7 @@ public class WebSocketGatewayGlobalFilter implements GlobalFilter, Ordered {
      * 取得连接id
      * @return 连接id
      */
-    protected static String getConnectionIdKey(){
+    protected String getConnectionIdKey(){
         if (connectionIdHeaderKey == null){
             WebSocket webSocket = getWebSocket();
             if (webSocket != null){
@@ -100,7 +102,7 @@ public class WebSocketGatewayGlobalFilter implements GlobalFilter, Ordered {
      * 取得WebSocket配置
      * @return WebSocket
      */
-    protected static WebSocket getWebSocket() {
+    protected WebSocket getWebSocket() {
         if (webSocket == null){
             webSocket = properties == null ? null : properties.getWebSocket();
         }

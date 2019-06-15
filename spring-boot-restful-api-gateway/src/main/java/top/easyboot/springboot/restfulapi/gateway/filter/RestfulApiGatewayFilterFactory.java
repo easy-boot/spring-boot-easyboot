@@ -35,6 +35,10 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
     @Autowired
     private RestfulApiGatewayProperties properties;
     /**
+     * 链接id的头的key
+     */
+    private String connectionIdHeaderKey;
+    /**
      * 原始处理工厂
      * @param factory
      */
@@ -65,6 +69,12 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
             /**
              * 清理操作者信息，防止注入
              */
+            System.out.println("properties");
+            System.out.println(properties);
+            System.out.println("getOperateHeaderKey");
+            System.out.println(properties.getOperateHeaderKey());
+            System.out.println("getAuthSignHeaderKey");
+            System.out.println(properties.getAuthSignHeaderKey());
             requestBuilder.headers(httpHeaders -> httpHeaders.remove(properties.getOperateHeaderKey()).remove(properties.getAuthSignHeaderKey()));
             /**
              * 实例化一个操作信息对象
@@ -82,6 +92,13 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
             /************************* 鉴权模块开始 *************************/
 
             HttpHeaders httpHeaders = requestOrigin.getHeaders();
+
+            if (getConnectionIdKey()!=null){
+                System.out.println(getConnectionIdKey());
+                String connectionId = httpHeaders.getFirst(getConnectionIdKey());
+                System.out.println("---*-*-*-*connectionId");
+                System.out.println(connectionId);
+            }
 
             AuthorizationInput ai = new AuthorizationInput();
             /**
@@ -234,6 +251,24 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
                 return chain.filter(exchange);
             }));
         };
+    }
+
+    /**
+     * 取得连接id
+     * @return 连接id
+     */
+    protected String getConnectionIdKey(){
+        if (connectionIdHeaderKey == null){
+            RestfulApiGatewayProperties.WebSocket webSocket = properties.getWebSocket();
+            System.out.println("webSocket");
+            System.out.println(webSocket);
+            if (webSocket != null){
+                connectionIdHeaderKey = webSocket.getConnectionIdHeaderKey();
+            }
+        }
+        System.out.println("connectionIdHeaderKey");
+        System.out.println(connectionIdHeaderKey);
+        return connectionIdHeaderKey;
     }
     public interface UidStorageFactory extends UidFactory, AuthClient.Storage{
 
