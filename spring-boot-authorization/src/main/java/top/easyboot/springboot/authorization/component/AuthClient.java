@@ -13,7 +13,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Client {
+public class AuthClient {
     /**
      * 授权信息存储操作对象
      */
@@ -28,7 +28,7 @@ public class Client {
      */
     protected Set<String> drives = new TreeSet();
 
-    public Client(Storage storage){
+    public AuthClient(Storage storage){
         this.storage = storage;
         this.drives.add("top.easyboot.springboot.authorization.drives.");
     }

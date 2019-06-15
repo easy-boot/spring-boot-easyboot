@@ -11,10 +11,10 @@ import org.apache.http.message.BasicHeader;
 import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.web.reactive.socket.WebSocketMessage;
-import reactor.core.publisher.Mono;
 import top.easyboot.core.rowraw.RowRawEntity;
 import top.easyboot.core.rowraw.RowRawUtil;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.WebSocketGatewayIHandler;
+import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties.WebSocket;
 
 import java.io.IOException;
 import java.net.*;
@@ -27,19 +27,35 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
     private Timer taskTimer;
     private String restfulProtocol = "EASYBOOTRESTFUL";
     private final String pingPath = "/ping";
+    /**
+     * 远程调用基本地址
+     */
+    protected static URL restfulBaseUrl;
+    /**
+     * 请求id的头的key
+     */
+    protected static String requestIdHeaderKey;
+
     @Override
     protected void onWebSocketMessage(String connectionId, WebSocketMessage message) {
-        if (isRowRawEntityAndHandler(connectionId, message)){
+        if (sessionService.containsKey(connectionId)){
             sessionService.get(connectionId).setUpdateAt(new Date());
+        }
+        if (isRowRawEntityAndHandler(connectionId, message)){
             return;
         }
     }
 
     @Override
-    protected void init() {
-        super.init();
+    protected void init(WebSocket webSocket) {
+        super.init(webSocket);
+        propertiesInit(webSocket);
         // 启动定时器
         taskInit();
+    }
+    protected void propertiesInit(WebSocket webSocket){
+        restfulBaseUrl = webSocket.getRestfulBaseUrl();
+        requestIdHeaderKey = webSocket.getRequestIdHeaderKey();
     }
     @Override
     public void pingAuth(String connectionId) {
@@ -66,8 +82,9 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
                 session.close();
                 continue;
             }
+            Date authAccessAt = session.getAuthAccessAt();
             // 每2分钟刷新一次授权信息
-            if ((now - (session.getAuthAccessAt().getTime()/1000))>120){
+            if (authAccessAt == null || (now - (authAccessAt.getTime()/1000))>120){
                 pingAuth(connectionId);
             }
         }
@@ -92,7 +109,7 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
                 headers.put(header.getName(), header.getValue());
             }
             if (requestId != null && !requestId.isEmpty()){
-                headers.put(properties.getRequestIdKey(), requestId);
+                headers.put(requestIdHeaderKey, requestId);
             }
             resEntity.setHeaders(headers);
 
@@ -159,9 +176,8 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
         String method = entity.getMethod();
         Map<String, String> headers = entity.getHeaders();
 
-        headers.put(properties.getConnectionIdKey(), connectionId);
+        headers.put(connectionIdHeaderKey, connectionId);
         String requestId = getRequestId(entity.getHeaders());
-        URL baseUrl = properties.getRestfulBaseUrl();
 
         //构造请求
         HttpEntityEnclosingRequestBase httpRequest = new HttpEntityEnclosingRequestBase() {
@@ -172,7 +188,7 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
         };
 
         try {
-            httpRequest.setURI(new URL(baseUrl.getProtocol(), baseUrl.getHost(), baseUrl.getPort(), entity.getPath()).toURI());
+            httpRequest.setURI(new URL(restfulBaseUrl.getProtocol(), restfulBaseUrl.getHost(), restfulBaseUrl.getPort(), entity.getPath()).toURI());
         }catch (URISyntaxException e){
             response(connectionId, requestId, null, e, type);
         }catch (MalformedURLException e){
@@ -213,9 +229,8 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
         });
     }
     protected String getRequestId(Map<String, String> headers){
-        String requestIdKey = properties.getRequestIdKey();
-        String requestIdKeyLower = requestIdKey.toLowerCase();
-        String requestId = headers.get(requestIdKey);
+        String requestIdKeyLower = requestIdHeaderKey.toLowerCase();
+        String requestId = headers.get(requestIdHeaderKey);
         String authorizationStr = "authorization";
         String authorization = null;
 
@@ -247,8 +262,7 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
      */
     @Override
     public void onApplicationEvent(WebServerInitializedEvent event) {
-        URL baseUrl = properties.getRestfulBaseUrl();
-        if (baseUrl == null){
+        if (restfulBaseUrl == null){
             String host;
             // webClient初始化
             try {
@@ -258,7 +272,7 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
             }
             String protocol = "http";
             try {
-                properties.setRestfulBaseUrl(new URL(protocol, host, event.getWebServer().getPort(), "/"));
+                restfulBaseUrl = new URL(protocol, host, event.getWebServer().getPort(), "/");
             }catch (MalformedURLException e){
 
             }
@@ -276,7 +290,11 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
         taskTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                taskRun();
+                try {
+                    taskRun();
+                }catch (Throwable e){
+                    e.printStackTrace();
+                }
             }
         }, new Date(), 5000);
     }

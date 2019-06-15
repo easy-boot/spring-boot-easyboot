@@ -13,11 +13,9 @@ import org.springframework.web.reactive.socket.server.support.WebSocketHandlerAd
 import top.easyboot.springboot.restfulapi.gateway.core.WebSocketGatewayHandler;
 import top.easyboot.springboot.restfulapi.gateway.filter.WebSocketGatewayGlobalFilter;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.WebSocketGatewayIHandler;
-import top.easyboot.springboot.restfulapi.gateway.property.WebSocketGatewayProperties;
 import top.easyboot.springboot.restfulapi.gateway.service.WebSocketGatewaySessionService;
 
 @Configuration
-@EnableConfigurationProperties(WebSocketGatewayProperties.class)
 @Import(WebSocketGatewaySessionService.class)
 @ConditionalOnProperty(prefix = "easyboot.restfulapi.gateway", name = {"enabled", "websocket.enabled"}, havingValue = "true")
 public class WebSocketGatewayConfiguration  {

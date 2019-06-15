@@ -12,16 +12,18 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import top.easyboot.springboot.authorization.component.Client;
+import top.easyboot.springboot.authorization.component.AuthClient;
 import top.easyboot.springboot.authorization.entity.Authorization;
 import top.easyboot.springboot.authorization.entity.AuthorizationInput;
 import top.easyboot.springboot.authorization.exception.AuthSignException;
-import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiFilterProperties;
+import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties;
 import top.easyboot.springboot.operate.entity.Operate;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+
 import org.springframework.core.io.buffer.DataBuffer;
 import top.easyboot.springboot.restfulapi.entity.RestfulApiException;
 
@@ -31,7 +33,7 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
     private Factory factory;
     private static final Log logger = LogFactory.getLog(RestfulApiGatewayFilterFactory.class);
     @Autowired
-    private RestfulApiFilterProperties properties;
+    private RestfulApiGatewayProperties properties;
     /**
      * 原始处理工厂
      * @param factory
@@ -48,9 +50,6 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
             return (exchange, chain) -> chain.filter(exchange);
         }
         return (exchangeOrigin, chain) -> {
-            // todo
-            System.out.println(config);
-            System.out.println(config.enabled);
             /**
              * 得到原始请求对象
              */
@@ -105,7 +104,7 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
             /**
              * 先定义一个变量来接收授权数据
              */
-            Authorization authorization =null;
+            Authorization authorizationTemp =null;
 
             AuthSignException authSignExceptionTemp = null;
 
@@ -113,26 +112,27 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
                 /**
                  * 试图获取授权会话信息
                  */
-                authorization = factory.getAuthorization(ai);
+                authorizationTemp = factory.getAuthorization(ai);
             }catch (AuthSignException e){
                 authSignExceptionTemp = e;
             }
-            AuthSignException authSignException = authSignExceptionTemp;
-
-
             /**
              * 保证存在一个授权对象
              */
-            if (authorization == null){
+            if (authorizationTemp == null){
                 /**
                  * 实例化授权对象
                  */
-                authorization = new Authorization();
+                authorizationTemp = new Authorization();
                 /**
                  * 重置授权状态通过为空
                  */
-                authorization.setPassAuth(false);
+                authorizationTemp.setPassAuth(false);
             }
+
+            final Authorization authorization = authorizationTemp;
+            final AuthSignException authSignException = authSignExceptionTemp;
+
             /**
              * 不同的授权，会清理授权keyid和客户端card
              */
@@ -175,6 +175,22 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
                  * 得到响应
                  */
                 ServerHttpResponse response = exchange.getResponse();
+                HttpHeaders responseHeaders = response.getHeaders();
+                List<String> uids = responseHeaders.get(properties.getUidUpdateHeaderKey());
+                System.out.println("uids");
+                System.out.println(uids);
+                if (uids != null && uids.size() > 0){
+//                    String uidInput = operate.getUid();
+                    String uidOutput = uids.get(uids.size()-1);
+                    System.out.println("uid");
+//                    System.out.println(uid);
+                    System.out.println("uid-input");
+                    System.out.println(operate.getUid());
+                    if (properties.isUidUpdateHeaderAutoRemove()){
+                        responseHeaders.remove(properties.getUidUpdateHeaderKey());
+                    }
+//                    factory.putUid(authorization.getAccessKeyId(), uid);
+                }
                 /**
                  * 如何微服务返回了403，就把授权签名的错误直接传送到客户端
                  */
@@ -219,7 +235,7 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
             }));
         };
     }
-    public interface UidStorageFactory extends UidFactory, Client.Storage{
+    public interface UidStorageFactory extends UidFactory, AuthClient.Storage{
 
     }
     public interface Factory extends UidFactory {
@@ -237,6 +253,7 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
          * @return
          */
         int getUid(String accessKeyId);
+        void putUid(String accessKeyId, int uid);
     }
     public static class Config {
         // 控制是否开启认证
@@ -257,10 +274,10 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
         try {
             ipAddress = request.getHeaders().getFirst("x-forwarded-for");
             if (ipAddress == null || ipAddress.length() == 0 || "unknown".equalsIgnoreCase(ipAddress)) {
-                ipAddress = request.getHeaders().getFirst("Proxy-Client-IP");
+                ipAddress = request.getHeaders().getFirst("Proxy-AuthClient-IP");
             }
             if (ipAddress == null || ipAddress.length() == 0 || "unknown".equalsIgnoreCase(ipAddress)) {
-                ipAddress = request.getHeaders().getFirst("WL-Proxy-Client-IP");
+                ipAddress = request.getHeaders().getFirst("WL-Proxy-AuthClient-IP");
             }
             if (ipAddress == null || ipAddress.length() == 0 || "unknown".equalsIgnoreCase(ipAddress)) {
                 ipAddress = request.getRemoteAddress().getHostString();

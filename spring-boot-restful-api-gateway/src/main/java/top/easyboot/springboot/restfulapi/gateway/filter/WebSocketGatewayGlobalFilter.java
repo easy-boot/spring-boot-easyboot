@@ -8,39 +8,103 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import top.easyboot.springboot.restfulapi.gateway.property.WebSocketGatewayProperties;
+import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties;
+import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties.WebSocket;
 import top.easyboot.springboot.restfulapi.gateway.service.WebSocketGatewaySessionService;
 
 @Component
 public class WebSocketGatewayGlobalFilter implements GlobalFilter, Ordered {
     @Autowired(required = false)
-    private WebSocketGatewayProperties properties;
+    private static RestfulApiGatewayProperties properties;
+    private static WebSocket webSocket;
+    /**
+     * 链接id的头的key
+     */
+    private static String connectionIdHeaderKey;
     /**
      * 会话连接池
      */
     @Autowired
     protected WebSocketGatewaySessionService sessionService;
-    public final static String ATTRIBUTE_IGNORE_TEST_GLOBAL_FILTER = "@ignoreWebSocketGatewayGlobalFilter";
+    /**
+     * 忽略属性
+     */
+    public final static String ATTRIBUTE_IGNORE_TEST_GLOBAL_FILTER = "@ignoreEasybootWebSocketGatewayGlobalFilter";
 
+    /**
+     * 过滤器
+     * @param exchange 交互数据
+     * @param chain chain
+     * @return 处理器
+     */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        //跳过检测
-        if (properties == null || properties.isEnabled() == false || exchange.getAttribute(ATTRIBUTE_IGNORE_TEST_GLOBAL_FILTER) != null) {
+        // 跳过过滤器
+        if (!isEnabled(exchange)) {
             return chain.filter(exchange);
         }
-        ServerHttpRequest serverHttpRequest = exchange.getRequest();
-        String connectionId = serverHttpRequest.getHeaders().getFirst(properties.getConnectionIdKey());
-        if (connectionId == null || connectionId.isEmpty()){
-            return chain.filter(exchange);
-        }
-        if (!sessionService.containsKey(connectionId)){
-            ServerHttpRequest request = exchange.getRequest().mutate()
-                    .headers(httpHeaders -> httpHeaders.remove(properties.getConnectionIdKey()))
-                    .build();
 
+        // 取得请求对象
+        ServerHttpRequest serverHttpRequest = exchange.getRequest();
+
+        // 试图获取长连接的connectionId[连接id]
+        String connectionId = serverHttpRequest.getHeaders().getFirst(getConnectionIdKey());
+
+        // 如果没有找到连接id跳过
+        if (connectionId == null || connectionId.isEmpty()){
+
+            // 跳过
+            return chain.filter(exchange);
+        }
+
+        // 判断当前会话服务中是否还存在 connectionId[连接id]
+        if (!sessionService.containsKey(connectionId)){
+            // 会话池没有该连接的时候，修改请求，请求头中移除connectionId[连接id]
+            ServerHttpRequest request = exchange.getRequest().mutate()
+                    .headers(httpHeaders -> httpHeaders.remove(getConnectionIdKey()))
+                    .build();
+            // 返回过滤器
             return chain.filter(exchange.mutate().request(request).build());
         }
+        // 继续
         return chain.filter(exchange);
+    }
+
+    /**
+     * 判断是否启动过滤器
+     * @param exchange 交互数据
+     * @return 是否需要过滤
+     */
+    protected static boolean isEnabled(ServerWebExchange exchange){
+        if (connectionIdHeaderKey == null || exchange.getAttribute(ATTRIBUTE_IGNORE_TEST_GLOBAL_FILTER) != null){
+            return false;
+        }
+        return getWebSocket().isEnabled();
+    }
+
+    /**
+     * 取得连接id
+     * @return 连接id
+     */
+    protected static String getConnectionIdKey(){
+        if (connectionIdHeaderKey == null){
+            WebSocket webSocket = getWebSocket();
+            if (webSocket != null){
+                connectionIdHeaderKey = webSocket.getConnectionIdHeaderKey();
+            }
+        }
+        return connectionIdHeaderKey;
+    }
+
+    /**
+     * 取得WebSocket配置
+     * @return WebSocket
+     */
+    protected static WebSocket getWebSocket() {
+        if (webSocket == null){
+            webSocket = properties == null ? null : properties.getWebSocket();
+        }
+        return webSocket;
     }
 
     @Override

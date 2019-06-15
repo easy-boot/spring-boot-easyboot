@@ -9,9 +9,11 @@ import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.WebSocketGatewayIHandler;
-import top.easyboot.springboot.restfulapi.gateway.property.WebSocketGatewayProperties;
+import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties;
+import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties.WebSocket;
 import top.easyboot.springboot.restfulapi.gateway.service.WebSocketGatewaySessionService;
 
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +23,7 @@ public abstract class WebSocketGatewayBaseHandler implements WebSocketGatewayIHa
      * 配置文件
      */
     @Autowired
-    protected WebSocketGatewayProperties properties;
+    protected RestfulApiGatewayProperties properties;
     @Autowired
     protected WebSocketHandler easybootRestfulApiWebSocketHandler;
     /**
@@ -33,7 +35,7 @@ public abstract class WebSocketGatewayBaseHandler implements WebSocketGatewayIHa
     /**
      * 初始化
      */
-    protected abstract void init();
+    protected abstract void init(WebSocket webSocket);
 
     /**
      * 创建连接id
@@ -82,34 +84,39 @@ public abstract class WebSocketGatewayBaseHandler implements WebSocketGatewayIHa
      */
     @Override
     public HandlerMapping getHandlerMapping() {
+        /**
+         * 创建
+         */
+        SimpleUrlHandlerMapping mapping = new SimpleUrlHandlerMapping();
+        // 初始化
+        WebSocket webSocket = properties.getWebSocket();
+        if (webSocket == null || !properties.isEnabled() || !webSocket.isEnabled()){
+            return mapping;
+        }
         // 初始化基本类
-        init();
+        init(webSocket);
         // 初始化WebSocketHandler的路由地图
         Map<String, WebSocketHandler> map = new HashMap<String, WebSocketHandler>();
         /**
          * 默认地址
          */
-        if (properties.getPath() == null){
-            properties.setPath(new String[]{"/easyboot-restful-api/websocket"});
+        if (webSocket.getPath() == null){
+            webSocket.setPath(new String[]{"/easyboot-restful-api/websocket"});
         }
         /**
          * 循环加入监听器
          */
-        for (String path : properties.getPath()) {
+        for (String path : webSocket.getPath()) {
             map.put(path, easybootRestfulApiWebSocketHandler);
         }
-        /**
-         * 创建
-         */
-        SimpleUrlHandlerMapping mapping = new SimpleUrlHandlerMapping();
         /**
          * 设置地图
          */
         mapping.setUrlMap(map);
-        if (properties.getOrder() == null){
+        if (webSocket.getOrder() == null){
             mapping.setOrder(Ordered.HIGHEST_PRECEDENCE);
         }else{
-            mapping.setOrder(properties.getOrder());
+            mapping.setOrder(webSocket.getOrder());
         }
 
         return mapping;
@@ -127,8 +134,6 @@ public abstract class WebSocketGatewayBaseHandler implements WebSocketGatewayIHa
             }
 
             WebSocketRestfulSession restfulSession = sessionService.createSession(connectionId, session);
-            // 试图ping一次授权
-            pingAuth(connectionId);
 
             session.receive().subscribe(message-> onWebSocketMessage(connectionId, message), e->{
                 e.printStackTrace();
@@ -140,7 +145,6 @@ public abstract class WebSocketGatewayBaseHandler implements WebSocketGatewayIHa
                     sessionService.remove(connectionId);
                 }
             });
-
 
             return session.send(restfulSession.getFlux()).doAfterSuccessOrError((res, throwable)->{
                 if (sessionService.containsKey(connectionId)){

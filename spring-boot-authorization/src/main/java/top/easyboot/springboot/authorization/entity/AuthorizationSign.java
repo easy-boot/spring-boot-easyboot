@@ -1,7 +1,7 @@
 package top.easyboot.springboot.authorization.entity;
 
 
-import top.easyboot.springboot.authorization.component.Client;
+import top.easyboot.springboot.authorization.component.AuthClient;
 
 public class AuthorizationSign {
     /**
@@ -31,7 +31,7 @@ public class AuthorizationSign {
     /**
      * 存储
      */
-    Client.Storage storage;
+    AuthClient.Storage storage;
 
     public AuthorizationInput getInput() {
         return input;
@@ -41,11 +41,11 @@ public class AuthorizationSign {
         this.input = input;
     }
 
-    public Client.Storage getStorage() {
+    public AuthClient.Storage getStorage() {
         return storage;
     }
 
-    public void setStorage(Client.Storage storage) {
+    public void setStorage(AuthClient.Storage storage) {
         this.storage = storage;
     }
 

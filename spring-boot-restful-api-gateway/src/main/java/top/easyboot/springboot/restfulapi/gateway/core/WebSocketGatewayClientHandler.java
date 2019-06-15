@@ -8,6 +8,7 @@ import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
 import org.apache.http.impl.nio.reactor.IOReactorConfig;
 import org.apache.http.nio.reactor.ConnectingIOReactor;
 import org.apache.http.nio.reactor.IOReactorException;
+import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties.WebSocket;
 
 public abstract class WebSocketGatewayClientHandler extends WebSocketGatewayConnidHandler {
     /**
@@ -15,8 +16,8 @@ public abstract class WebSocketGatewayClientHandler extends WebSocketGatewayConn
      */
     protected CloseableHttpAsyncClient client;
     @Override
-    protected void init(){
-        super.init();
+    protected void init(WebSocket webSocket){
+        super.init(webSocket);
         // 客户端初始化
         clientInit();
     }

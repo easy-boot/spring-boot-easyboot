@@ -1,6 +1,7 @@
 package top.easyboot.springboot.restfulapi.gateway.core;
 
 import top.easyboot.springboot.restfulapi.gateway.interfaces.WebSocketGatewayIHandler;
+import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties.WebSocket;
 import top.easyboot.springboot.restfulapi.util.ConnectionIdUtil;
 
 import java.net.InetAddress;
@@ -11,25 +12,31 @@ public abstract class WebSocketGatewayConnidHandler extends WebSocketGatewayPing
      * 链接id工具
      */
     private ConnectionIdUtil connectionIdUtil;
+    /**
+     * 链接id的头的key
+     */
+    protected static String connectionIdHeaderKey;
     @Override
-    protected void init() {
-        // 初始化 链接id 前缀初始化
-        connectionIdPrefixInit();
+    protected void init(WebSocket webSocket) {
+        connectionIdPrefixInit(webSocket);
     }
     @Override
     protected String generateConnectionId() throws Exception {
         return connectionIdUtil.generateConnectionId();
     }
 
-    protected void connectionIdPrefixInit() {
-        if (properties.getConnectionIdPrefix() == null || properties.getConnectionIdPrefix().isEmpty()){
+    protected void connectionIdPrefixInit(WebSocket webSocket) {
+        connectionIdHeaderKey = webSocket.getConnectionIdHeaderKey();
+        // 初始化 链接id 前缀初始化
+
+        if (webSocket.getConnectionIdPrefix() == null || webSocket.getConnectionIdPrefix().isEmpty()){
             try {
-                properties.setConnectionIdPrefix(InetAddress.getLocalHost().getHostAddress());
+                webSocket.setConnectionIdPrefix(InetAddress.getLocalHost().getHostAddress());
             }catch (UnknownHostException e){
             }
         }
-        if (properties.getConnectionIdPrefix() == null || properties.getConnectionIdPrefix().isEmpty()){
-            properties.setConnectionIdPrefix("127.0.0.1");
+        if (webSocket.getConnectionIdPrefix() == null || webSocket.getConnectionIdPrefix().isEmpty()){
+            webSocket.setConnectionIdPrefix("127.0.0.1");
             System.out.println("easyboot.restfulapi.gateway.websocket.connectionIdPrefix must is string");
         }
 
@@ -39,6 +46,6 @@ public abstract class WebSocketGatewayConnidHandler extends WebSocketGatewayPing
                 return containsConnectionId(connectionId);
             }
         };
-        connectionIdUtil.setConnectionIdPrefixByIpV4(properties.getConnectionIdPrefix());
+        connectionIdUtil.setConnectionIdPrefixByIpV4(webSocket.getConnectionIdPrefix());
     }
 }

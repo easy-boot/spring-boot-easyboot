@@ -8,7 +8,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import top.easyboot.springboot.authorization.component.Client;
+import top.easyboot.springboot.authorization.component.AuthClient;
 import top.easyboot.springboot.authorization.entity.Authorization;
 import top.easyboot.springboot.authorization.entity.AuthorizationInput;
 import top.easyboot.springboot.authorization.exception.AuthSignException;
@@ -16,10 +16,10 @@ import top.easyboot.springboot.restfulapi.gateway.filter.RestfulApiGatewayFilter
 import top.easyboot.springboot.restfulapi.gateway.filter.RestfulApiGatewayFilterFactory.Factory;
 import top.easyboot.springboot.restfulapi.gateway.filter.RestfulApiGatewayFilterFactory.UidFactory;
 import top.easyboot.springboot.restfulapi.gateway.filter.RestfulApiGatewayFilterFactory.UidStorageFactory;
-import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiFilterProperties;
+import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties;
 
 @Configuration
-@EnableConfigurationProperties(RestfulApiFilterProperties.class)
+@EnableConfigurationProperties(RestfulApiGatewayProperties.class)
 @ConditionalOnProperty(name = "easyboot.restfulapi.gateway.enabled", matchIfMissing = true, havingValue = "true")
 public class RestfulApiFilterConfiguration implements ApplicationContextAware {
     // Spring应用上下文环境
@@ -38,45 +38,56 @@ public class RestfulApiFilterConfiguration implements ApplicationContextAware {
             return context.getBean(Factory.class);
         }catch (NoSuchBeanDefinitionException e1){
         }
+        AuthClient authClient = null;
+        UidFactory uidFactory = null;
         try {
             UidStorageFactory uidStorageFactory = context.getBean(UidStorageFactory.class);
-            Client client = new Client(uidStorageFactory);
-            return new Factory() {
-                @Override
-                public Authorization getAuthorization(AuthorizationInput authorizationInput) throws AuthSignException {
-                    return client.getAuthorization(authorizationInput);
-                }
-
-                @Override
-                public int getUid(String accessKeyId) {
-                    return uidStorageFactory.getUid(accessKeyId);
-                }
-            };
+            authClient = new AuthClient(uidStorageFactory);
+            uidFactory = uidStorageFactory;
         }catch (NoSuchBeanDefinitionException e2){
         }
-        try {
-            UidFactory uidFactory = context.getBean(UidFactory.class);
-            Client clientTemp = null;
-            try{
-                clientTemp = context.getBean(Client.class);
-            }catch (NoSuchBeanDefinitionException e3){
-                Client.Storage storage = context.getBean(Client.Storage.class);
-                clientTemp = new Client(storage);
-            }
-            Client client = clientTemp;
-            return new Factory() {
-                @Override
-                public Authorization getAuthorization(AuthorizationInput authorizationInput) throws AuthSignException {
-                    return client.getAuthorization(authorizationInput);
-                }
 
-                @Override
-                public int getUid(String accessKeyId) {
-                    return uidFactory.getUid(accessKeyId);
-                }
-            };
-        }catch (NoSuchBeanDefinitionException e4){
+        if (uidFactory == null){
+            try {
+                uidFactory = context.getBean(UidFactory.class);
+            }catch (NoSuchBeanDefinitionException e3){
+            }
         }
-        return null;
+        if (authClient == null){
+            try {
+                authClient = context.getBean(AuthClient.class);
+            }catch (NoSuchBeanDefinitionException e3){
+            }
+        }
+        if (authClient == null){
+            try {
+                AuthClient.Storage storage = context.getBean(AuthClient.Storage.class);
+                if (storage!=null){
+                    authClient = new AuthClient(storage);
+                }
+            }catch (NoSuchBeanDefinitionException e3){
+            }
+        }
+        if (authClient == null || uidFactory == null){
+            return null;
+        }
+
+        final AuthClient authClientFinal = authClient;
+        final UidFactory uidFactoryFinal = uidFactory;
+
+        return new Factory() {
+            @Override
+            public Authorization getAuthorization(AuthorizationInput authorizationInput) throws AuthSignException {
+                return authClientFinal.getAuthorization(authorizationInput);
+            }
+            @Override
+            public int getUid(String accessKeyId) {
+                return uidFactoryFinal.getUid(accessKeyId);
+            }
+            @Override
+            public void putUid(String accessKeyId, int uid) {
+                uidFactoryFinal.putUid(accessKeyId, uid);
+            }
+        };
     }
 }
