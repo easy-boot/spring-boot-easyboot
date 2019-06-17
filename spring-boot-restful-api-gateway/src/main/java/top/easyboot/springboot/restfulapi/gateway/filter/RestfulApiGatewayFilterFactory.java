@@ -16,6 +16,8 @@ import top.easyboot.springboot.authorization.component.AuthClient;
 import top.easyboot.springboot.authorization.entity.Authorization;
 import top.easyboot.springboot.authorization.entity.AuthorizationInput;
 import top.easyboot.springboot.authorization.exception.AuthSignException;
+import top.easyboot.springboot.authorization.interfaces.core.IAuthClient;
+import top.easyboot.springboot.restfulapi.gateway.interfaces.service.IUserAuthAccessService;
 import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties;
 import top.easyboot.springboot.operate.entity.Operate;
 
@@ -30,27 +32,28 @@ import top.easyboot.springboot.restfulapi.entity.RestfulApiException;
 
 @Component
 public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory<RestfulApiGatewayFilterFactory.Config> {
-    private Factory factory;
     private static final Log logger = LogFactory.getLog(RestfulApiGatewayFilterFactory.class);
     @Autowired
     private RestfulApiGatewayProperties properties;
+    @Autowired(required = false)
+    private IUserAuthAccessService userAuthAccessService;
+    @Autowired
+    private IAuthClient authClient;
     /**
      * 链接id的头的key
      */
     private String connectionIdHeaderKey;
     /**
      * 原始处理工厂
-     * @param factory
      */
-    public RestfulApiGatewayFilterFactory(Factory factory) {
+    public RestfulApiGatewayFilterFactory() {
         super(Config.class);
-        this.factory = factory;
     }
 
 
     @Override
     public GatewayFilter apply(Config config) {
-        if (factory == null){
+        if (userAuthAccessService == null){
             return (exchange, chain) -> chain.filter(exchange);
         }
         return (exchangeOrigin, chain) -> {
@@ -123,7 +126,7 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
                 /**
                  * 试图获取授权会话信息
                  */
-                authorizationTemp = factory.getAuthorization(ai);
+                authorizationTemp = authClient.getAuthorization(ai);
             }catch (AuthSignException e){
                 authSignExceptionTemp = e;
             }
@@ -162,7 +165,7 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
              * 如果授权通过，就试图获取登录uid
              */
             if (authorization.isPassAuth()){
-                operate.setUid(factory.getUid(authorization.getAccessKeyId()));
+                operate.setUid(userAuthAccessService.getUid(authorization.getAccessKeyId()));
             }
             /************************* 鉴权模块结束 *************************/
 
@@ -188,8 +191,6 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
                 ServerHttpResponse response = exchange.getResponse();
                 HttpHeaders responseHeaders = response.getHeaders();
                 List<String> uids = responseHeaders.get(properties.getUidUpdateHeaderKey());
-                System.out.println("uids");
-                System.out.println(uids);
                 if (uids != null && uids.size() > 0){
                     String uidInput = String.valueOf(operate.getUid());
                     String uidOutput = uids.get(uids.size()-1);
@@ -201,9 +202,9 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
                         responseHeaders.remove(properties.getUidUpdateHeaderKey());
                     }
                     if ((uidInput.isEmpty()||uidInput.equals("0"))&&!uidOutput.isEmpty()&&!uidOutput.equals("0")){
-                        factory.putUid(authorization.getAccessKeyId(), Integer.valueOf(uidOutput));
+                        userAuthAccessService.putUid(authorization.getAccessKeyId(), Integer.valueOf(uidOutput));
                     }else if(!uidOutput.isEmpty()&&!uidOutput.equals("0")&&(uidOutput.isEmpty()||uidOutput.equals("0"))){
-                        factory.putUid(authorization.getAccessKeyId(), 0);
+                        userAuthAccessService.putUid(authorization.getAccessKeyId(), 0);
                     }
                 }
                 /**

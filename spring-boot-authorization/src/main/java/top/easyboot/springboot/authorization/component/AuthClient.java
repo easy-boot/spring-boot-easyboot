@@ -5,6 +5,7 @@ import top.easyboot.springboot.authorization.entity.AuthorizationInput;
 import top.easyboot.springboot.authorization.entity.AuthorizationSign;
 import top.easyboot.springboot.authorization.interfaces.AuthSignDrive;
 import top.easyboot.springboot.authorization.exception.AuthSignException;
+import top.easyboot.springboot.authorization.interfaces.core.IAuthClient;
 import top.easyboot.springboot.authorization.utils.Str;
 
 import java.util.HashMap;
@@ -13,7 +14,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class AuthClient {
+public class AuthClient implements IAuthClient {
     /**
      * 授权信息存储操作对象
      */
