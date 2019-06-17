@@ -7,13 +7,12 @@ import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.reactive.handler.SimpleUrlHandlerMapping;
 import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.WebSocketMessage;
-import org.springframework.web.reactive.socket.WebSocketSession;
-import top.easyboot.springboot.restfulapi.gateway.interfaces.WebSocketGatewayIHandler;
+import top.easyboot.springboot.restfulapi.gateway.interfaces.handler.WebSocketGatewayIHandler;
+import top.easyboot.springboot.restfulapi.gateway.interfaces.service.IConnectionIdService;
+import top.easyboot.springboot.restfulapi.gateway.interfaces.service.ISessionService;
 import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties;
 import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties.WebSocket;
-import top.easyboot.springboot.restfulapi.gateway.service.WebSocketGatewaySessionService;
 
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,11 +25,13 @@ public abstract class WebSocketGatewayBaseHandler implements WebSocketGatewayIHa
     protected RestfulApiGatewayProperties properties;
     @Autowired
     protected WebSocketHandler easybootRestfulApiWebSocketHandler;
+    @Autowired
+    protected IConnectionIdService connectionIdService;
     /**
      * 会话连接池
      */
     @Autowired
-    protected WebSocketGatewaySessionService sessionService;
+    protected ISessionService sessionService;
 
     /**
      * 初始化
@@ -38,36 +39,11 @@ public abstract class WebSocketGatewayBaseHandler implements WebSocketGatewayIHa
     protected abstract void init(WebSocket webSocket);
 
     /**
-     * 创建连接id
-     * @return 连接id
-     * @throws Exception
-     */
-    protected abstract String generateConnectionId() throws Exception;
-
-    /**
-     * ping对方
-     * @param connectionId 连接id
-     */
-    protected abstract void ping(String connectionId);
-
-    /**
-     * pong对方
-     * @param connectionId 连接id
-     */
-    protected abstract void pong(String connectionId);
-
-    /**
      * 收到信息
      * @param connectionId
      * @param message
      */
     protected abstract void onWebSocketMessage(String connectionId, WebSocketMessage message);
-
-    /**
-     * 请求客户端绑定用户信息
-     * @param connectionId 连接id
-     */
-    public abstract void pingAuth(String connectionId);
 
     /**
      * 判断连接id是否存在
@@ -125,15 +101,16 @@ public abstract class WebSocketGatewayBaseHandler implements WebSocketGatewayIHa
     @Override
     public WebSocketHandler getWebSocketHandler() {
 
-        return (final WebSocketSession session) -> {
+        return (final org.springframework.web.reactive.socket.WebSocketSession session) -> {
             String connectionId;
             try {
-                connectionId = generateConnectionId();
+                // 创建连接id
+                connectionId = connectionIdService.generateConnectionId();
             }catch (Throwable e){
                 return session.close();
             }
 
-            WebSocketRestfulSession restfulSession = sessionService.createSession(connectionId, session);
+            WebSocketSession restfulSession = sessionService.createSession(connectionId, session);
 
             session.receive().subscribe(message-> onWebSocketMessage(connectionId, message), e->{
                 e.printStackTrace();

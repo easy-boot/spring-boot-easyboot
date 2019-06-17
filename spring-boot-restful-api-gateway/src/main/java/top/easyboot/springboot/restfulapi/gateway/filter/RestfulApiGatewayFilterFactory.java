@@ -191,16 +191,20 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
                 System.out.println("uids");
                 System.out.println(uids);
                 if (uids != null && uids.size() > 0){
-//                    String uidInput = operate.getUid();
+                    String uidInput = String.valueOf(operate.getUid());
                     String uidOutput = uids.get(uids.size()-1);
-                    System.out.println("uid");
-//                    System.out.println(uid);
-                    System.out.println("uid-input");
-                    System.out.println(operate.getUid());
+                    System.out.println("uidInput");
+                    System.out.println(uidInput);
+                    System.out.println("uidOutput");
+                    System.out.println(uidOutput);
                     if (properties.isUidUpdateHeaderAutoRemove()){
                         responseHeaders.remove(properties.getUidUpdateHeaderKey());
                     }
-//                    factory.putUid(authorization.getAccessKeyId(), uid);
+                    if ((uidInput.isEmpty()||uidInput.equals("0"))&&!uidOutput.isEmpty()&&!uidOutput.equals("0")){
+                        factory.putUid(authorization.getAccessKeyId(), Integer.valueOf(uidOutput));
+                    }else if(!uidOutput.isEmpty()&&!uidOutput.equals("0")&&(uidOutput.isEmpty()||uidOutput.equals("0"))){
+                        factory.putUid(authorization.getAccessKeyId(), 0);
+                    }
                 }
                 /**
                  * 如何微服务返回了403，就把授权签名的错误直接传送到客户端

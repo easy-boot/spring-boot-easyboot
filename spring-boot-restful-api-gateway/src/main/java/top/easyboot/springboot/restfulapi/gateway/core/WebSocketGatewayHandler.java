@@ -13,7 +13,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.web.reactive.socket.WebSocketMessage;
 import top.easyboot.core.rowraw.RowRawEntity;
 import top.easyboot.core.rowraw.RowRawUtil;
-import top.easyboot.springboot.restfulapi.gateway.interfaces.WebSocketGatewayIHandler;
+import top.easyboot.springboot.restfulapi.gateway.interfaces.handler.WebSocketGatewayIHandler;
 import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties.WebSocket;
 
 import java.io.IOException;
@@ -27,6 +27,9 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
     private Timer taskTimer;
     private String restfulProtocol = "EASYBOOTRESTFUL";
     private final String pingPath = "/ping";
+    private String signalProtocol = "EASYBOOTSIGNAL";
+    private final String SIGNAL = "SIGNAL";
+
     /**
      * 远程调用基本地址
      */
@@ -35,6 +38,10 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
      * 请求id的头的key
      */
     protected static String requestIdHeaderKey;
+    /**
+     * 链接id的头的key
+     */
+    protected static String connectionIdHeaderKey;
 
     @Override
     protected void onWebSocketMessage(String connectionId, WebSocketMessage message) {
@@ -56,17 +63,7 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
     protected void propertiesInit(WebSocket webSocket){
         restfulBaseUrl = webSocket.getRestfulBaseUrl();
         requestIdHeaderKey = webSocket.getRequestIdHeaderKey();
-    }
-    @Override
-    public void pingAuth(String connectionId) {
-        // ping
-        RowRawEntity rawEntity = new RowRawEntity();
-        rawEntity.setProtocol(signalProtocol);
-        rawEntity.setMethod(SIGNAL);
-        rawEntity.setPath("/ping/auth");
-        if (sessionService.containsKey(connectionId)){
-            sessionService.get(connectionId).textMessage(new String(RowRawUtil.stringify(rawEntity)));
-        }
+        connectionIdHeaderKey = webSocket.getConnectionIdHeaderKey();
     }
     /**
      * 处理心跳问题
@@ -74,10 +71,10 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
     protected void taskRun() {
         long now = new Date().getTime()/1000;
         for (String connectionId : sessionService.keySet()) {
-            WebSocketRestfulSession session = sessionService.get(connectionId);
+            WebSocketSession session = sessionService.get(connectionId);
             long pingInterval = now - (session.getUpdateAt().getTime()/1000);
             if (pingInterval>45){
-                ping(connectionId);
+                sessionService.ping(connectionId);
             } else if (pingInterval>60*5){
                 session.close();
                 continue;
@@ -85,7 +82,7 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
             Date authAccessAt = session.getAuthAccessAt();
             // 每2分钟刷新一次授权信息
             if (authAccessAt == null || (now - (authAccessAt.getTime()/1000))>120){
-                pingAuth(connectionId);
+                sessionService.pingAuth(connectionId);
             }
         }
     }
@@ -95,7 +92,7 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
         if (!sessionService.containsKey(connectionId)){
             return;
         }
-        WebSocketRestfulSession session = sessionService.get(connectionId);
+        WebSocketSession session = sessionService.get(connectionId);
         RowRawEntity resEntity = new RowRawEntity();
         resEntity.setProtocol(restfulProtocol);
 
@@ -161,7 +158,7 @@ public class WebSocketGatewayHandler extends WebSocketGatewayClientHandler imple
                 // 如果是一个ping
                 if (SIGNAL.equals(entity.getMethod()) && pingPath.equals(entity.getPath())){
                     // 调用pong回应
-                    pong(connectionId);
+                    sessionService.pong(connectionId);
                 }
             }
 

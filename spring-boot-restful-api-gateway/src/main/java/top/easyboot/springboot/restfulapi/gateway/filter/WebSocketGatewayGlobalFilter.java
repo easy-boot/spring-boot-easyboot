@@ -8,9 +8,9 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import top.easyboot.springboot.restfulapi.gateway.interfaces.service.ISessionService;
 import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties;
 import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties.WebSocket;
-import top.easyboot.springboot.restfulapi.gateway.service.WebSocketGatewaySessionService;
 
 @Component
 public class WebSocketGatewayGlobalFilter implements GlobalFilter, Ordered {
@@ -25,7 +25,7 @@ public class WebSocketGatewayGlobalFilter implements GlobalFilter, Ordered {
      * 会话连接池
      */
     @Autowired
-    protected WebSocketGatewaySessionService sessionService;
+    protected ISessionService sessionService;
     /**
      * 忽略属性
      */

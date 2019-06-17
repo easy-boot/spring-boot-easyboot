@@ -6,7 +6,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.socket.HandshakeInfo;
 import org.springframework.web.reactive.socket.WebSocketMessage;
-import org.springframework.web.reactive.socket.WebSocketSession;
 import reactor.core.Disposable;
 import reactor.core.Disposables;
 import reactor.core.publisher.Flux;
@@ -17,7 +16,7 @@ import java.net.URI;
 import java.util.Date;
 import java.util.function.Function;
 
-public class WebSocketRestfulSession {
+public class WebSocketSession {
 
     /**
      * 最后更新时间
@@ -27,7 +26,7 @@ public class WebSocketRestfulSession {
      * 授权更新时间
      */
     private Date authAccessAt;
-    private WebSocketSession session;
+    private org.springframework.web.reactive.socket.WebSocketSession session;
     private FluxSink<WebSocketMessage> sink;
     private final Disposable.Composite compositeClose = Disposables.composite();
     private final Flux<WebSocketMessage> flux = Flux.create(sink -> sinkInit(sink));
@@ -36,11 +35,11 @@ public class WebSocketRestfulSession {
      * 长连接会话
      * @param webSocketSession
      */
-    public WebSocketRestfulSession(WebSocketSession webSocketSession){
+    public WebSocketSession(org.springframework.web.reactive.socket.WebSocketSession webSocketSession){
         session = webSocketSession;
         updateAt = new Date();
     }
-    public WebSocketSession getSession() {
+    public org.springframework.web.reactive.socket.WebSocketSession getSession() {
         return session;
     }
     public Flux<WebSocketMessage> getFlux(){
@@ -61,11 +60,11 @@ public class WebSocketRestfulSession {
         }
         return is;
     }
-    public WebSocketRestfulSession onClose(Disposable d){
+    public WebSocketSession onClose(Disposable d){
         compositeClose.add(d);
         return this;
     }
-    public WebSocketRestfulSession close(){
+    public WebSocketSession close(){
         compositeClose.dispose();
         try {
             sink.complete();
@@ -80,25 +79,25 @@ public class WebSocketRestfulSession {
 
         return this;
     }
-    public WebSocketRestfulSession textMessage(String message){
+    public WebSocketSession textMessage(String message){
         if (!isClose()){
             sink.next(session.textMessage(message));
         }
         return this;
     }
-    public WebSocketRestfulSession binaryMessage(Function<DataBufferFactory, DataBuffer> payloadFactory){
+    public WebSocketSession binaryMessage(Function<DataBufferFactory, DataBuffer> payloadFactory){
         if (!isClose()){
             sink.next(session.binaryMessage(payloadFactory));
         }
         return this;
     }
-    public WebSocketRestfulSession pingMessage(Function<DataBufferFactory, DataBuffer> payloadFactory){
+    public WebSocketSession pingMessage(Function<DataBufferFactory, DataBuffer> payloadFactory){
         if (!isClose()){
             sink.next(session.pingMessage(payloadFactory));
         }
         return this;
     }
-    public WebSocketRestfulSession pongMessage(Function<DataBufferFactory, DataBuffer> payloadFactory){
+    public WebSocketSession pongMessage(Function<DataBufferFactory, DataBuffer> payloadFactory){
         if (!isClose()){
             sink.next(session.pongMessage(payloadFactory));
         }
