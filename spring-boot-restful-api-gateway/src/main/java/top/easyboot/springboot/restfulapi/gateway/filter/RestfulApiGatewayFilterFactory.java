@@ -200,12 +200,6 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
                     String uidOutput = uids.get(uids.size()-1);
 
                     // todo
-                    System.out.println("uidInput");
-                    System.out.println(uidInput);
-                    System.out.println("uidOutput");
-                    System.out.println(uidOutput);
-                    System.out.println("connectionId");
-                    System.out.println(connectionId);
                     if (properties.isUidUpdateHeaderAutoRemove()){
                         responseHeaders.remove(properties.getUidUpdateHeaderKey());
                     }
