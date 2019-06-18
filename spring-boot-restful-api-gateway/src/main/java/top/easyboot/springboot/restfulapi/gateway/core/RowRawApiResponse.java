@@ -1,6 +1,5 @@
 package top.easyboot.springboot.restfulapi.gateway.core;
 
-import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.util.ReferenceCountUtil;
 import org.reactivestreams.Publisher;

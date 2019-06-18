@@ -2,12 +2,12 @@ package top.easyboot.springboot.restfulapi.gateway.service;
 
 import top.easyboot.core.rowraw.RowRawEntity;
 import top.easyboot.core.rowraw.RowRawUtil;
-import top.easyboot.springboot.restfulapi.gateway.core.WebSocketSession;
+import top.easyboot.springboot.restfulapi.gateway.core.RowRawWebSocketSession;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.service.ISessionService;
 
 import java.util.HashMap;
 
-public class SessionService extends HashMap<String, WebSocketSession> implements ISessionService {
+public class SessionService extends HashMap<String, RowRawWebSocketSession> implements ISessionService {
     private String signalProtocol = "EASYBOOTSIGNAL";
     private final String SIGNAL = "SIGNAL";
 
@@ -48,8 +48,8 @@ public class SessionService extends HashMap<String, WebSocketSession> implements
     }
 
     @Override
-    public WebSocketSession createSession(String connectionId, final org.springframework.web.reactive.socket.WebSocketSession session){
-        WebSocketSession restfulSession = new WebSocketSession(session);
+    public RowRawWebSocketSession createSession(String connectionId, final org.springframework.web.reactive.socket.WebSocketSession session){
+        RowRawWebSocketSession restfulSession = new RowRawWebSocketSession(session);
         put(connectionId, restfulSession);
         return restfulSession;
     }

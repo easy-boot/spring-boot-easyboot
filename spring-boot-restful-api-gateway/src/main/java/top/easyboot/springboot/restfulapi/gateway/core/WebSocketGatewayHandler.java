@@ -120,7 +120,7 @@ public class WebSocketGatewayHandler implements WebSocketGatewayIHandler {
                 return session.close();
             }
 
-            WebSocketSession restfulSession = sessionService.createSession(connectionId, session);
+            RowRawWebSocketSession restfulSession = sessionService.createSession(connectionId, session);
 
             session.receive().subscribe(message-> onWebSocketMessage(connectionId, message), e->{
                 e.printStackTrace();
@@ -153,7 +153,7 @@ public class WebSocketGatewayHandler implements WebSocketGatewayIHandler {
     protected void taskRun() {
         long now = new Date().getTime()/1000;
         for (String connectionId : sessionService.keySet()) {
-            WebSocketSession session = sessionService.get(connectionId);
+            RowRawWebSocketSession session = sessionService.get(connectionId);
             long pingInterval = now - (session.getUpdateAt().getTime()/1000);
             if (pingInterval>45){
                 sessionService.ping(connectionId);

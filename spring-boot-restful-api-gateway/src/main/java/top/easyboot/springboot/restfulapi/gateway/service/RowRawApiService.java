@@ -102,32 +102,4 @@ public class RowRawApiService implements IRowRawApiService {
         sendResponse(resEntity, connectionId, requestId);
     }
 
-    protected String getRequestId(Map<String, String> headers){
-        String requestIdKeyLower = requestIdHeaderKey.toLowerCase();
-        String requestId = headers.get(requestIdHeaderKey);
-        String authorizationStr = "authorization";
-        String authorization = null;
-
-        if (requestId == null || requestId.isEmpty()){
-            requestId = headers.get(requestIdKeyLower);
-        }
-
-        if (requestId == null || requestId.isEmpty()){
-            for (String key : headers.keySet()) {
-                String keyLower = key.toLowerCase();
-                if (requestIdKeyLower.equals(keyLower)){
-                    requestId = headers.get(key);
-                }else if(keyLower.equals(authorizationStr)){
-                    authorization = headers.get(key);
-                }
-            }
-        }
-
-        if ((requestId == null || requestId.isEmpty()) && authorization != null && !authorization.isEmpty()){
-
-        }
-
-
-        return requestId;
-    }
 }

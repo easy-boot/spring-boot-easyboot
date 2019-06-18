@@ -10,7 +10,9 @@ import org.springframework.web.reactive.DispatcherHandler;
 import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.server.support.WebSocketHandlerAdapter;
+import top.easyboot.springboot.restfulapi.gateway.core.GatewaySmartLifecycle;
 import top.easyboot.springboot.restfulapi.gateway.core.WebSocketGatewayHandler;
+import top.easyboot.springboot.restfulapi.gateway.interfaces.core.IGatewaySmartLifecycle;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.handler.WebSocketGatewayIHandler;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.service.IConnectionIdService;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.service.IRowRawApiService;
@@ -69,6 +71,13 @@ public class WebSocketGatewayConfiguration  {
     public IRowRawApiService easybootRowRawApiService(DispatcherHandler dispatcherHandler, ISessionService sessionService, WebSocket webSocket){
         RowRawApiService rowRawApiService =  new RowRawApiService(dispatcherHandler, sessionService, webSocket.getRequestIdHeaderKey());
         return rowRawApiService;
+    }
+
+    @Bean(name = "easybootGatewaySmartLifecycle")
+    @Description("Auto use easyboot GatewaySmartLifecycle")
+    @ConditionalOnMissingBean(IGatewaySmartLifecycle.class)
+    public IGatewaySmartLifecycle easybootGatewaySmartLifecycle(){
+        return new GatewaySmartLifecycle();
     }
 
     @Bean(name = "easybootWebSocketGatewayProperties")

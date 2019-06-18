@@ -1,10 +1,10 @@
 package top.easyboot.springboot.restfulapi.gateway.interfaces.service;
 
-import top.easyboot.springboot.restfulapi.gateway.core.WebSocketSession;
+import top.easyboot.springboot.restfulapi.gateway.core.RowRawWebSocketSession;
 
 import java.util.Map;
 
-public interface ISessionService extends Map<String, WebSocketSession> {
+public interface ISessionService extends Map<String, RowRawWebSocketSession> {
     /**
      * pong 客户端
      * @param connectionId 连接id
@@ -26,5 +26,5 @@ public interface ISessionService extends Map<String, WebSocketSession> {
      * @param session reactiveWebSocketSession
      * @return easybootWebSocketSession
      */
-    WebSocketSession createSession(String connectionId, final org.springframework.web.reactive.socket.WebSocketSession session);
+    RowRawWebSocketSession createSession(String connectionId, final org.springframework.web.reactive.socket.WebSocketSession session);
 }
