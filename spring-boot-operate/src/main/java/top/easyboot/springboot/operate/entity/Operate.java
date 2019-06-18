@@ -24,6 +24,11 @@ public class Operate {
      */
     protected long startTime = System.currentTimeMillis();
 
+    /**
+     * 长连接id
+     */
+    protected String connectionId;
+
     public int getUid() {
         return uid;
     }
@@ -53,6 +58,14 @@ public class Operate {
 
     public void setStartTime(long startTime) {
         this.startTime = startTime;
+    }
+
+    public String getConnectionId() {
+        return connectionId;
+    }
+
+    public void setConnectionId(String connectionId) {
+        this.connectionId = connectionId;
     }
 
     /**

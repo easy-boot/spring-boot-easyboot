@@ -9,6 +9,7 @@ import top.easyboot.springboot.authorization.interfaces.core.IAuthClient;
 import top.easyboot.springboot.authorization.utils.Str;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -43,25 +44,29 @@ public class AuthClient implements IAuthClient {
         String delimiter;
         String authVersion;
         String authValue;
+        Map<String, String> headers = authorizationInput.getHeaders();
         /**
          * 试图获取授权头
          */
-        String authorizationOrigin = authorizationInput.getHeaders().get("authorization");
+        String authorizationOrigin = headers.get("authorization");
+
 
         if (authorizationOrigin == null || authorizationOrigin.isEmpty()){
             /**
              * 试图不区分大小写获取
              */
-            for (String key : authorizationInput.getHeaders().keySet()) {
+            for (String key : headers.keySet()) {
                 if (key != null && !key.isEmpty() && key.toLowerCase().equals("authorization")){
-                    authorizationOrigin = authorizationInput.getHeaders().get(key);
+                    authorizationOrigin = headers.get(key);
                 }
             }
         }
 
+
         if (authorizationOrigin == null || authorizationOrigin.isEmpty()){
             throw new AuthSignException(AuthSignException.E_AUTHENTICATION_INFO_ERROR);
         }
+        authorizationOrigin = authorizationOrigin.trim();
         int delimiterSlantingIndex = authorizationOrigin.indexOf("/");
         int delimiterSpaceIndex = authorizationOrigin.indexOf(" ");
         if (delimiterSlantingIndex < 0 && delimiterSpaceIndex < 0){
@@ -75,6 +80,9 @@ public class AuthClient implements IAuthClient {
             delimiter = " ";
             authVersion = authorizationOrigin.substring(0, delimiterSpaceIndex);
             authValue = authorizationOrigin.substring(delimiterSpaceIndex+1);
+        }
+        if (authVersion==null || authVersion.isEmpty()){
+            throw new AuthSignException(AuthSignException.E_AUTHENTICATION_VERSION_ERROR);
         }
         Pattern linePattern = Pattern.compile("-(\\w)");
 

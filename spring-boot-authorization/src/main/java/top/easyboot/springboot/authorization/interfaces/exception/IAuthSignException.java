@@ -3,7 +3,7 @@ package top.easyboot.springboot.authorization.interfaces.exception;
 import top.easyboot.springboot.restfulapi.annotation.ExampleMessage;
 import static top.easyboot.springboot.restfulapi.exception.Exception.id;
 
-public interface AuthSign {
+public interface IAuthSignException {
     @ExampleMessage("还没有授权签名")
     int E_NOT_AUTH_SIGN = id();
     @ExampleMessage("Authentication信息错误")

@@ -17,6 +17,7 @@ import top.easyboot.springboot.authorization.entity.Authorization;
 import top.easyboot.springboot.authorization.entity.AuthorizationInput;
 import top.easyboot.springboot.authorization.exception.AuthSignException;
 import top.easyboot.springboot.authorization.interfaces.core.IAuthClient;
+import top.easyboot.springboot.restfulapi.gateway.core.RowRawApiRequest;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.service.IUserAuthAccessService;
 import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties;
 import top.easyboot.springboot.operate.entity.Operate;
@@ -40,10 +41,6 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
     @Autowired
     private IAuthClient authClient;
     /**
-     * 链接id的头的key
-     */
-    private String connectionIdHeaderKey;
-    /**
      * 原始处理工厂
      */
     public RestfulApiGatewayFilterFactory() {
@@ -61,6 +58,8 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
              * 得到原始请求对象
              */
             ServerHttpRequest requestOrigin = exchangeOrigin.getRequest();
+
+            ServerHttpResponse responseOrigin = exchangeOrigin.getResponse();
             /**
              * 得到一个请求的构建器对象
              */
@@ -72,7 +71,10 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
             /**
              * 清理操作者信息，防止注入
              */
-            requestBuilder.headers(httpHeaders -> httpHeaders.remove(properties.getOperateHeaderKey()).remove(properties.getAuthSignHeaderKey()));
+            requestBuilder.headers(httpHeaders -> {
+                httpHeaders.remove(properties.getOperateHeaderKey());
+                httpHeaders.remove(properties.getAuthSignHeaderKey());
+            });
             /**
              * 实例化一个操作信息对象
              */
@@ -90,11 +92,8 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
 
             HttpHeaders httpHeaders = requestOrigin.getHeaders();
 
-            if (getConnectionIdKey()!=null){
-                System.out.println(getConnectionIdKey());
-                String connectionId = httpHeaders.getFirst(getConnectionIdKey());
-                System.out.println("---*-*-*-*connectionId");
-                System.out.println(connectionId);
+            if (requestOrigin instanceof RowRawApiRequest){
+                operate.setConnectionId(((RowRawApiRequest)requestOrigin).getConnectionId());
             }
 
             AuthorizationInput ai = new AuthorizationInput();
@@ -180,7 +179,7 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
             /**
              * 构建请求对象，并且构建一个exchange传递到下一个过滤器
              */
-            ServerWebExchange exchange = exchangeBuilder.request(requestBuilder.build()).build();
+            ServerWebExchange exchange = exchangeBuilder.request(requestBuilder.build()).response(responseOrigin).build();
             /**
              * 下一个过滤器
              */
@@ -203,7 +202,7 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
                     }
                     if ((uidInput.isEmpty()||uidInput.equals("0"))&&!uidOutput.isEmpty()&&!uidOutput.equals("0")){
                         userAuthAccessService.putUid(authorization.getAccessKeyId(), Integer.valueOf(uidOutput));
-                    }else if(!uidOutput.isEmpty()&&!uidOutput.equals("0")&&(uidOutput.isEmpty()||uidOutput.equals("0"))){
+                    }else if(!uidInput.isEmpty()&&!uidInput.equals("0")&&(uidOutput.isEmpty()||uidOutput.equals("0"))){
                         userAuthAccessService.putUid(authorization.getAccessKeyId(), 0);
                     }
                 }
@@ -244,6 +243,7 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
                     response.getHeaders().set("Content-Length", String.valueOf(bits.length));
                     return response.writeWith(Mono.just(buffer));
                 }
+
                 /**
                  * 下一个过滤器
                  */
@@ -252,19 +252,6 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
         };
     }
 
-    /**
-     * 取得连接id
-     * @return 连接id
-     */
-    protected String getConnectionIdKey(){
-        if (connectionIdHeaderKey == null){
-            RestfulApiGatewayProperties.WebSocket webSocket = properties.getWebSocket();
-            if (webSocket != null){
-                connectionIdHeaderKey = webSocket.getConnectionIdHeaderKey();
-            }
-        }
-        return connectionIdHeaderKey;
-    }
     public interface UidStorageFactory extends UidFactory, AuthClient.Storage{
 
     }

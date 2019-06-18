@@ -9,18 +9,11 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Description;
 import top.easyboot.springboot.authorization.component.AuthClient;
-import top.easyboot.springboot.authorization.entity.Authorization;
-import top.easyboot.springboot.authorization.entity.AuthorizationInput;
-import top.easyboot.springboot.authorization.exception.AuthSignException;
 import top.easyboot.springboot.authorization.interfaces.core.IAuthClient;
 import top.easyboot.springboot.restfulapi.gateway.filter.RestfulApiGatewayFilterFactory;
-import top.easyboot.springboot.restfulapi.gateway.filter.RestfulApiGatewayFilterFactory.Factory;
-import top.easyboot.springboot.restfulapi.gateway.filter.RestfulApiGatewayFilterFactory.UidFactory;
-import top.easyboot.springboot.restfulapi.gateway.filter.RestfulApiGatewayFilterFactory.UidStorageFactory;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.service.IUserAuthAccessService;
 import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties;
 

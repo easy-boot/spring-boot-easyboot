@@ -2,19 +2,19 @@ package top.easyboot.springboot.restfulapi.gateway.service;
 
 import top.easyboot.springboot.restfulapi.gateway.interfaces.service.IConnectionIdService;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.service.ISessionService;
-import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties.WebSocket;
+import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties;
 import top.easyboot.springboot.restfulapi.util.ConnectionIdUtil;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-public class ConnectionIdService implements IConnectionIdService {
+public abstract class ConnectionIdAbstractService implements IConnectionIdService {
     /**
      * 链接id工具
      */
-    private ConnectionIdUtil connectionIdUtil;
+    protected ConnectionIdUtil connectionIdUtil;
 
-    public ConnectionIdService(WebSocket webSocket, ISessionService webSocketSessionService) {
+    public ConnectionIdAbstractService(RestfulApiGatewayProperties.WebSocket webSocket, ISessionService webSocketSessionService) {
 
         String connectionIdPrefix = webSocket.getConnectionIdPrefix();
         if (webSocket.getConnectionIdPrefix() == null || webSocket.getConnectionIdPrefix().isEmpty()){

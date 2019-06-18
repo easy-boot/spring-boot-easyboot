@@ -57,17 +57,9 @@ public class RestfulApiGatewayProperties {
          */
         private String connectionIdPrefix;
         /**
-         * 远程调用基本地址
-         */
-        private URL restfulBaseUrl;
-        /**
          * 请求id的头的key
          */
         private String requestIdHeaderKey = "x-request-id";
-        /**
-         * 链接id的头的key
-         */
-        private String connectionIdHeaderKey = "x-easyboot-connection-id";
 
         public boolean isEnabled() {
             return enabled;
@@ -109,28 +101,12 @@ public class RestfulApiGatewayProperties {
             this.connectionIdPrefix = connectionIdPrefix;
         }
 
-        public URL getRestfulBaseUrl() {
-            return restfulBaseUrl;
-        }
-
-        public void setRestfulBaseUrl(URL restfulBaseUrl) {
-            this.restfulBaseUrl = restfulBaseUrl;
-        }
-
         public String getRequestIdHeaderKey() {
             return requestIdHeaderKey;
         }
 
         public void setRequestIdHeaderKey(String requestIdHeaderKey) {
             this.requestIdHeaderKey = requestIdHeaderKey;
-        }
-
-        public String getConnectionIdHeaderKey() {
-            return connectionIdHeaderKey;
-        }
-
-        public void setConnectionIdHeaderKey(String connectionIdHeaderKey) {
-            this.connectionIdHeaderKey = connectionIdHeaderKey;
         }
     }
 
