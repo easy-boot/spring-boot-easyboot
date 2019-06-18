@@ -1,6 +1,8 @@
 package top.easyboot.springboot.restfulapi.gateway.core;
 
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.util.ReferenceCountUtil;
 import org.reactivestreams.Publisher;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
@@ -20,13 +22,13 @@ public class RowRawApiResponse extends AbstractServerHttpResponse {
     private String requestId;
     protected RowRawEntity rawEntity;
     public RowRawApiResponse(RowRawEntity rawEntity) {
-        this(rawEntity, new NettyDataBufferFactory(new PooledByteBufAllocator(true)));
+        this(rawEntity, new NettyDataBufferFactory(new UnpooledByteBufAllocator(false,false,false)));
     }
     public RowRawApiResponse(DataBufferFactory dataBufferFactory) {
         this(new RowRawEntity(), dataBufferFactory);
     }
     public RowRawApiResponse() {
-        this(new RowRawEntity(), new NettyDataBufferFactory(new PooledByteBufAllocator(true)));
+        this(new RowRawEntity(), new NettyDataBufferFactory(new UnpooledByteBufAllocator(false,false,false)));
     }
     public RowRawApiResponse(RowRawEntity rawEntity, DataBufferFactory dataBufferFactory) {
         super(dataBufferFactory);
@@ -68,7 +70,7 @@ public class RowRawApiResponse extends AbstractServerHttpResponse {
         MonoProcessor<Void> completion = MonoProcessor.create();
         body.reduce(bufferFactory().allocateBuffer(), (previous, current) -> {
             previous.write(current);
-            DataBufferUtils.release(current);
+            ReferenceCountUtil.release(current);
             return previous;
         }).subscribe(buffer->{
             rawEntity.setBody(bufferToBytes(buffer));

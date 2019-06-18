@@ -1,10 +1,10 @@
 package top.easyboot.springboot.restfulapi.gateway.core;
 
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.UnpooledByteBufAllocator;
 import org.reactivestreams.Publisher;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
-import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
 import org.springframework.http.*;
 import org.springframework.http.HttpCookie;
@@ -91,7 +91,7 @@ public class RowRawApiRequest extends AbstractServerHttpRequest {
         URI uri = new URL(protocol, hostName==null?null:hostName.trim(), port, entity.getPath().trim()).toURI();
 
 //        final DataBufferFactory bufferFactory = new DefaultDataBufferFactory();
-        final DataBufferFactory bufferFactory = new NettyDataBufferFactory(new PooledByteBufAllocator(true));
+        final DataBufferFactory bufferFactory = new NettyDataBufferFactory(new UnpooledByteBufAllocator(false,false,false));
 
         Publisher<? extends DataBuffer> body = Flux.just(bufferFactory.wrap(entity.getBody()));
 
