@@ -37,6 +37,10 @@ public class RestfulApiFilterConfiguration implements ApplicationContextAware {
         }
     }
 
+    @Bean
+    public RestfulApiGatewayFilterFactory restfulApiGatewayFilterFactory(){
+        return new RestfulApiGatewayFilterFactory();
+    }
 
     @Bean(name = "easybootAuthClient")
     @Description("Auto use easyboot auth client")
@@ -58,8 +62,4 @@ public class RestfulApiFilterConfiguration implements ApplicationContextAware {
 
 
 
-    @Bean
-    public RestfulApiGatewayFilterFactory restfulApiGatewayFilterFactory(){
-        return new RestfulApiGatewayFilterFactory();
-    }
 }

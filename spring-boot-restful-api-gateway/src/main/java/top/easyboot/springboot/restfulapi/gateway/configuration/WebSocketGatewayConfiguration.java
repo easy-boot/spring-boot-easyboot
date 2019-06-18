@@ -38,9 +38,9 @@ public class WebSocketGatewayConfiguration  {
         return handler.getWebSocketHandler();
     }
 
-    @Bean
-    @ConditionalOnMissingBean(name = "webSocketHandlerAdapter")
-    public WebSocketHandlerAdapter webSocketHandlerAdapter() {
+    @Bean("easybootWebSocketHandlerAdapter")
+    @ConditionalOnMissingBean(WebSocketHandlerAdapter.class)
+    public WebSocketHandlerAdapter easybootWebSocketHandlerAdapter() {
         return new WebSocketHandlerAdapter();
     }
     @Bean
