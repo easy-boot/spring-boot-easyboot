@@ -46,15 +46,6 @@ public abstract class WebSocketGatewayBaseHandler implements WebSocketGatewayIHa
     protected abstract void onWebSocketMessage(String connectionId, WebSocketMessage message);
 
     /**
-     * 判断连接id是否存在
-     * @param connectionId
-     * @return
-     */
-    public boolean containsConnectionId(String connectionId) {
-        return sessionService.containsKey(connectionId);
-    }
-
-    /**
      * 获取监听地图
      * @return
      */

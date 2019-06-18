@@ -78,7 +78,7 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
             /**
              * 实例化一个操作信息对象
              */
-            Operate operate = new Operate();
+            final Operate operate = new Operate();
             /**
              * 设置uid为0
              * 也就是没有登录的意思
@@ -95,6 +95,8 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
             if (requestOrigin instanceof RowRawApiRequest){
                 operate.setConnectionId(((RowRawApiRequest)requestOrigin).getConnectionId());
             }
+
+            final String connectionId = operate.getConnectionId();
 
             AuthorizationInput ai = new AuthorizationInput();
             /**
@@ -197,6 +199,8 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
                     System.out.println(uidInput);
                     System.out.println("uidOutput");
                     System.out.println(uidOutput);
+                    System.out.println("connectionId");
+                    System.out.println(connectionId);
                     if (properties.isUidUpdateHeaderAutoRemove()){
                         responseHeaders.remove(properties.getUidUpdateHeaderKey());
                     }
@@ -252,26 +256,6 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
         };
     }
 
-    public interface UidStorageFactory extends UidFactory, AuthClient.Storage{
-
-    }
-    public interface Factory extends UidFactory {
-        /**
-         * 试图授权
-         * @param authorizationInput
-         * @return
-         */
-        Authorization getAuthorization(AuthorizationInput authorizationInput) throws AuthSignException;
-    }
-    public interface UidFactory {
-        /**
-         * 取得用户uid
-         * @param accessKeyId
-         * @return
-         */
-        int getUid(String accessKeyId);
-        void putUid(String accessKeyId, int uid);
-    }
     public static class Config {
         // 控制是否开启认证
         private boolean enabled;

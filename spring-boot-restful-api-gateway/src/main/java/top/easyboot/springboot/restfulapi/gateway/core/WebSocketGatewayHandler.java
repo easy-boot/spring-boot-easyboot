@@ -19,10 +19,6 @@ public class WebSocketGatewayHandler extends WebSocketGatewayBaseHandler impleme
     private final String pingPath = "/ping";
     private String signalProtocol = "EASYBOOTSIGNAL";
     private final String SIGNAL = "SIGNAL";
-    /**
-     * 请求id的头的key
-     */
-    protected static String requestIdHeaderKey;
 
     private IRowRawApiService rowRawApiService;
 
@@ -42,12 +38,8 @@ public class WebSocketGatewayHandler extends WebSocketGatewayBaseHandler impleme
 
     @Override
     protected void init(WebSocket webSocket) {
-        propertiesInit(webSocket);
         // 启动定时器
         taskInit();
-    }
-    protected void propertiesInit(WebSocket webSocket){
-        requestIdHeaderKey = webSocket.getRequestIdHeaderKey();
     }
     /**
      * 处理心跳问题
