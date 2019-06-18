@@ -18,6 +18,7 @@ import top.easyboot.springboot.authorization.entity.AuthorizationInput;
 import top.easyboot.springboot.authorization.exception.AuthSignException;
 import top.easyboot.springboot.authorization.interfaces.core.IAuthClient;
 import top.easyboot.springboot.restfulapi.gateway.core.RowRawApiRequest;
+import top.easyboot.springboot.restfulapi.gateway.interfaces.service.IConnectionIdService;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.service.IUserAuthAccessService;
 import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties;
 import top.easyboot.springboot.operate.entity.Operate;
@@ -38,6 +39,8 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
     private RestfulApiGatewayProperties properties;
     @Autowired(required = false)
     private IUserAuthAccessService userAuthAccessService;
+    @Autowired
+    private IConnectionIdService connectionIdService;
     @Autowired
     private IAuthClient authClient;
     /**
@@ -195,6 +198,8 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
                 if (uids != null && uids.size() > 0){
                     String uidInput = String.valueOf(operate.getUid());
                     String uidOutput = uids.get(uids.size()-1);
+
+                    // todo
                     System.out.println("uidInput");
                     System.out.println(uidInput);
                     System.out.println("uidOutput");
@@ -204,6 +209,7 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
                     if (properties.isUidUpdateHeaderAutoRemove()){
                         responseHeaders.remove(properties.getUidUpdateHeaderKey());
                     }
+                    connectionIdService.refresh(connectionId, uidOutput);
                     if ((uidInput.isEmpty()||uidInput.equals("0"))&&!uidOutput.isEmpty()&&!uidOutput.equals("0")){
                         userAuthAccessService.putUid(authorization.getAccessKeyId(), Integer.valueOf(uidOutput));
                     }else if(!uidInput.isEmpty()&&!uidInput.equals("0")&&(uidOutput.isEmpty()||uidOutput.equals("0"))){
