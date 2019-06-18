@@ -49,17 +49,4 @@ public class OperateInterceptor implements HandlerInterceptor {
          */
         throw new Exception("需要登录");
     }
-    /*
-     * 整个请求处理完，视图已渲染。如果存在异常则Exception不为空
-     */
-    @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex)
-            throws Exception {
-        /**
-         * 操作者信息
-         */
-        Operate operate = GetOperate.get(request);
-        System.out.println("CustomerHandlerInterceptor afterCompletion, {}");
-        System.out.println(operate);
-    }
 }
