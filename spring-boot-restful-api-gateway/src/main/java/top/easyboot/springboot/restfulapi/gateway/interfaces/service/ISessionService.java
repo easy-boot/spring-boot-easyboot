@@ -1,30 +1,31 @@
 package top.easyboot.springboot.restfulapi.gateway.interfaces.service;
 
-import top.easyboot.springboot.restfulapi.gateway.core.RowRawWebSocketSession;
-
+import org.springframework.web.reactive.socket.WebSocketSession;
+import top.easyboot.springboot.restfulapi.gateway.core.WebSocketSessionBase;
+import top.easyboot.springboot.restfulapi.gateway.exception.SessionException;
 import java.util.Map;
 
-public interface ISessionService extends Map<String, RowRawWebSocketSession> {
-    /**
-     * pong 客户端
-     * @param connectionId 连接id
-     */
-    void pong(String connectionId);
-    /**
-     * ping 客户端
-     * @param connectionId 连接id
-     */
-    void ping(String connectionId);
-    /**
-     * ping 客户端授权状态，可以为空实现
-     * @param connectionId 连接id
-     */
-    void pingAuth(String connectionId);
+public interface ISessionService extends Map<String, WebSocketSessionBase> {
+    void start();
+    void stop();
     /**
      * 创建会话
-     * @param connectionId 连接id
      * @param session reactiveWebSocketSession
      * @return easybootWebSocketSession
      */
-    RowRawWebSocketSession createSession(String connectionId, final org.springframework.web.reactive.socket.WebSocketSession session);
+    WebSocketSessionBase createSession(WebSocketSession session) throws SessionException;
+
+    /**
+     * 创建连接
+     * @return 连接id
+     * @throws Throwable
+     */
+    String generateConnectionId() throws SessionException;
+
+    /**
+     * 绑定用户uid与连接id关系
+     * @param connectionId 连接id
+     * @param uid 用户uid
+     */
+    void refreshBindUid(String connectionId, String uid);
 }

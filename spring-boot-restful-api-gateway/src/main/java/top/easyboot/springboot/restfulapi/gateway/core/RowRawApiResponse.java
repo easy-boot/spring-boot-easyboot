@@ -67,12 +67,13 @@ public class RowRawApiResponse extends AbstractServerHttpResponse {
     private Mono<Void> writeHandler(Flux<DataBuffer> body){
         // Avoid .then() which causes data buffers to be released
         MonoProcessor<Void> completion = MonoProcessor.create();
-        body.reduce(bufferFactory().allocateBuffer(), (previous, current) -> {
-            previous.write(current);
-            ReferenceCountUtil.release(current);
-            return previous;
-        }).subscribe(buffer->{
-            rawEntity.setBody(bufferToBytes(buffer));
+
+        body.subscribe(buffer -> {
+            byte[] pos = new byte[buffer.readableByteCount()];
+            buffer.read(pos);
+            rawEntity.setBody(pos);
+            ReferenceCountUtil.release(buffer);
+            DataBufferUtils.release(buffer);
             completion.onComplete();
         }, throwable->{
             completion.onError(throwable);
@@ -117,11 +118,5 @@ public class RowRawApiResponse extends AbstractServerHttpResponse {
         this.requestId = requestId;
     }
 
-    private static byte[] bufferToBytes(DataBuffer buffer) {
-        byte[] bytes = new byte[buffer.readableByteCount()];
-        buffer.read(bytes);
-        DataBufferUtils.release(buffer);
-        return bytes;
-    }
 
 }

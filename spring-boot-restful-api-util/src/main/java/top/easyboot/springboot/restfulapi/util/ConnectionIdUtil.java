@@ -78,13 +78,18 @@ public abstract class ConnectionIdUtil {
             }
             batchRecorderHex = getNextBatchRecorderHex();
             if (batchRecorderHexFisrt.equals(batchRecorderHex) && (++times)>=2){
-                throw new Exception("没有找到");
+                throw new Exception("No available connection id found");
             }
         }
     }
-    public static Entity parse(String connectionId){
+    public static Entity parse(String connectionId) throws Exception {
+        Entity entity = new Entity();
+        parse(connectionId, entity);
+        return entity;
+    }
+    public static void parse(String connectionId, Entity entity) throws Exception {
         if (connectionId == null || connectionId.isEmpty()){
-            return null;
+            throw new Exception("connectionId empty");
         }
         String t = String.valueOf(connectionId.charAt(0));
         String ip;
@@ -102,9 +107,12 @@ public abstract class ConnectionIdUtil {
             batchHex = connectionId.substring(130, 132);
             recorderHex = connectionId.substring(133);
         }else{
-            return null;
+            throw new Exception("ConnectionId format error");
         }
-        return new Entity(ip, ipHex, Integer.parseInt(batchHex, 16), Integer.parseInt(recorderHex, 16));
+        entity.setIp(ip);
+        entity.setIpHex(ipHex);
+        entity.setBatch(Integer.parseInt(batchHex, 16));
+        entity.setRecorder(Integer.parseInt(recorderHex, 16));
     }
 
     public int getRecorder() {
@@ -200,17 +208,20 @@ public abstract class ConnectionIdUtil {
     }
 
     protected abstract boolean isUseIng(String connectionId);
+    public static class Exception extends java.lang.Exception {
+        public Exception(String message){
+            super(message);
+        }
+    }
     public static class Entity{
         private String ip;
         private String ipHex;
         private int batch;
         private int recorder;
 
-        public Entity(String ip, String ipHex, int batch, int recorder) {
-            this.ip = ip;
-            this.ipHex = ipHex;
-            this.batch = batch;
-            this.recorder = recorder;
+        private Entity() {}
+        public Entity(String connectionId) throws Exception {
+            parse(connectionId, this);
         }
 
         public String getIp() {

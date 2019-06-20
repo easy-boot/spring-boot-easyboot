@@ -1,56 +1,149 @@
 package top.easyboot.springboot.restfulapi.gateway.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.socket.WebSocketMessage;
 import top.easyboot.core.rowraw.RowRawEntity;
 import top.easyboot.core.rowraw.RowRawUtil;
-import top.easyboot.springboot.restfulapi.gateway.core.RowRawWebSocketSession;
-import top.easyboot.springboot.restfulapi.gateway.interfaces.service.ISessionService;
+import top.easyboot.springboot.restfulapi.gateway.core.WebSocketSessionBase;
+import top.easyboot.springboot.restfulapi.gateway.exception.SessionException;
+import top.easyboot.springboot.restfulapi.gateway.interfaces.service.IRowRawApiService;
+import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties;
+import top.easyboot.springboot.restfulapi.util.ConnectionIdUtil;
 
-import java.util.HashMap;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
+import java.util.Date;
 
-public class SessionService extends HashMap<String, RowRawWebSocketSession> implements ISessionService {
-    private String signalProtocol = "EASYBOOTSIGNAL";
-    private final String SIGNAL = "SIGNAL";
+@Service
+public class SessionService extends SessionAbstractService {
+    /**
+     * 链接id工具
+     */
+    protected ConnectionIdUtil connectionIdUtil;
+
+    @Autowired
+    private IRowRawApiService rowRawApiService;
+
+
+    public SessionService(RestfulApiGatewayProperties.WebSocket webSocket) {
+
+        String connectionIdPrefix = webSocket.getConnectionIdPrefix();
+        if (connectionIdPrefix == null || connectionIdPrefix.isEmpty()){
+            try {
+                connectionIdPrefix = InetAddress.getLocalHost().getHostAddress();
+            }catch (UnknownHostException e){
+            }
+        }
+        if (connectionIdPrefix == null || connectionIdPrefix.isEmpty()){
+            connectionIdPrefix = "127.0.0.1";
+        }
+        webSocket.setConnectionIdPrefix(connectionIdPrefix);
+
+        connectionIdUtil = new ConnectionIdUtil(){
+            @Override
+            protected boolean isUseIng(String connectionId) {
+                return containsKey(connectionId);
+            }
+        };
+        connectionIdUtil.setConnectionIdPrefixByIpV4(connectionIdPrefix);
+    }
 
     @Override
-    public void pong(String connectionId) {
-        // pong
-        RowRawEntity rawEntity = new RowRawEntity();
-        rawEntity.setProtocol(signalProtocol);
-        rawEntity.setStatus("200");
-        rawEntity.setStatusText("OK");
-        if (containsKey(connectionId)){
-            get(connectionId).textMessage(new String(RowRawUtil.stringify(rawEntity)));
+    public void start(){
+        System.out.println("start-start");
+        super.start();
+    }
+    @Override
+    public void stop(){
+        System.out.println("stop-stop");
+        super.stop();
+    }
+
+    @Override
+    public void refreshBindUid(String connectionId, String uid) {
+
+    }
+
+    @Override
+    public String generateConnectionId() throws SessionException {
+        if (connectionIdUtil == null){
+            throw new SessionException("connectionIdUtil is null");
+        }
+        try {
+            return connectionIdUtil.generateConnectionId();
+        }catch (ConnectionIdUtil.Exception e){
+            throw new SessionException(e.getMessage(), e);
         }
     }
 
-    @Override
-    public void ping(String connectionId) {
-        // ping
-        RowRawEntity rawEntity = new RowRawEntity();
-        rawEntity.setProtocol(signalProtocol);
-        rawEntity.setMethod(SIGNAL);
-        rawEntity.setPath("/ping");
-        if (containsKey(connectionId)){
-            get(connectionId).textMessage(new String(RowRawUtil.stringify(rawEntity)));
+    protected void onWebSocketMessage(String connectionId, WebSocketMessage message){
+        if (isRowRawEntityAndHandler(connectionId, message)){
+            return;
         }
     }
 
-    @Override
-    public void pingAuth(String connectionId) {
-        // ping
-        RowRawEntity rawEntity = new RowRawEntity();
-        rawEntity.setProtocol(signalProtocol);
-        rawEntity.setMethod(SIGNAL);
-        rawEntity.setPath("/ping/auth");
-        if (containsKey(connectionId)){
-            get(connectionId).textMessage(new String(RowRawUtil.stringify(rawEntity)));
+    protected boolean isRowRawEntityAndHandler(String connectionId, WebSocketMessage webSocketMessage){
+        WebSocketMessage.Type type = webSocketMessage.getType();
+        RowRawEntity entity;
+        if (type == WebSocketMessage.Type.TEXT){
+            entity = RowRawUtil.parse(webSocketMessage.getPayloadAsText().getBytes());
+        }else if (type == WebSocketMessage.Type.BINARY){
+            DataBuffer buffer = webSocketMessage.getPayload();
+            byte[] pos = new byte[buffer.readableByteCount()];
+            buffer.read(pos);
+            entity = RowRawUtil.parse(pos);
+        }else{
+            return false;
+        }
+        if (entity.getProtocol() == null){
+            return false;
+        }
+        String method = entity.getMethod();
+        String status = entity.getStatus();
+        if (method!=null){
+            if (restfulProtocol.equals(entity.getProtocol())){
+                InetSocketAddress remoteAddress = get(connectionId).getRemoteAddress();
+
+                rowRawApiService.rpcApi(entity, connectionId, remoteAddress, null, null, type != WebSocketMessage.Type.TEXT);
+//                rpcApi(entity, connectionId, type);
+            }else if (signalProtocol.equals(entity.getProtocol())){
+                // 如果是一个ping
+                if (SIGNAL.equals(entity.getMethod()) && pingPath.equals(entity.getPath())){
+                    // 调用pong回应
+                    pong(connectionId);
+                }
+            }
+
+        }else if (status!=null){
+            System.out.println("响应");
+
+        }
+
+        return true;
+    }
+
+
+    protected void taskRun(){
+        long now = new Date().getTime()/1000;
+        for (String connectionId : keySet()) {
+            WebSocketSessionBase session = get(connectionId);
+            long pingInterval = now - (session.getUpdatedAt().getTime()/1000);
+            if (pingInterval>45){
+                ping(connectionId);
+            } else if (pingInterval>60*5){
+                session.close();
+                continue;
+            }
+            Date authAccessAt = session.getAuthAccessAt();
+            // 每2分钟刷新一次授权信息
+            if (authAccessAt == null || (now - (authAccessAt.getTime()/1000))>120){
+                pingAuth(connectionId);
+            }
         }
     }
 
-    @Override
-    public RowRawWebSocketSession createSession(String connectionId, final org.springframework.web.reactive.socket.WebSocketSession session){
-        RowRawWebSocketSession restfulSession = new RowRawWebSocketSession(session);
-        put(connectionId, restfulSession);
-        return restfulSession;
-    }
+
 }
