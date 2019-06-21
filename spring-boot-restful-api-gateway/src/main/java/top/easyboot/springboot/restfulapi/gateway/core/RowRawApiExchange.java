@@ -9,17 +9,9 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 
 public final class RowRawApiExchange extends DefaultServerWebExchange {
-    private RowRawApiExchange(RowRawApiRequest request, RowRawApiResponse response,  WebSessionManager sessionManager) {
+    public RowRawApiExchange(RowRawApiRequest request, RowRawApiResponse response,  WebSessionManager sessionManager) {
         super(request, response, sessionManager,
                 ServerCodecConfigurer.create(), new AcceptHeaderLocaleContextResolver());
-    }
-
-
-    public static RowRawApiExchange create(RowRawApiRequest request, RowRawApiResponse response, WebSessionManager sessionManager) throws URISyntaxException, MalformedURLException {
-
-
-        return new RowRawApiExchange(request, response,
-                sessionManager != null ? sessionManager : new DefaultWebSessionManager());
     }
 
     @Override

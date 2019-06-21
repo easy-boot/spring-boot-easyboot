@@ -6,8 +6,6 @@ import top.easyboot.springboot.restfulapi.gateway.exception.SessionException;
 import java.util.Map;
 
 public interface ISessionService extends Map<String, WebSocketSessionBase> {
-    void start();
-    void stop();
     /**
      * 创建会话
      * @param session reactiveWebSocketSession

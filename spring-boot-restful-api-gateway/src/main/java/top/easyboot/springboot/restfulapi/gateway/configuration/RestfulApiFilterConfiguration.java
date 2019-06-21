@@ -20,23 +20,7 @@ import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProp
 @Configuration
 @EnableConfigurationProperties(RestfulApiGatewayProperties.class)
 @ConditionalOnProperty(name = "easyboot.restfulapi.gateway.enabled", matchIfMissing = true, havingValue = "true")
-public class RestfulApiFilterConfiguration implements ApplicationContextAware {
-    // Spring应用上下文环境
-    private static ApplicationContext context;
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        System.out.println("setApplicationContext");
-        context = applicationContext;
-
-        try {
-            context.getBean(IUserAuthAccessService.class);
-        }catch (NoSuchBeanDefinitionException e3){
-            throw new BeansException("must interface IUserAuthAccessService"){
-
-            };
-        }
-    }
-
+public class RestfulApiFilterConfiguration{
     @Bean
     public RestfulApiGatewayFilterFactory restfulApiGatewayFilterFactory(){
         return new RestfulApiGatewayFilterFactory();

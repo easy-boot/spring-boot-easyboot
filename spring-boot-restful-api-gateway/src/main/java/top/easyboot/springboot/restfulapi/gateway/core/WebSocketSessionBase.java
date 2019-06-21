@@ -31,6 +31,11 @@ public abstract class WebSocketSessionBase extends WebSocketSessionEntity {
      */
     protected final Flux<WebSocketMessage> flux;
     /**
+     * 最后一条消息是否二进制
+     */
+    public boolean isLastMessageBinary = false;
+
+    /**
      * sink
      */
     protected FluxSink<WebSocketMessage> sink;
@@ -48,7 +53,14 @@ public abstract class WebSocketSessionBase extends WebSocketSessionEntity {
         sink.onCancel(()-> close()).onDispose(()-> close());
     }
     protected void sessionInit(){
-        session.receive().subscribe(message-> onWebSocketMessage(message), e->{
+        session.receive().subscribe(message-> {
+            if (message.getType() == WebSocketMessage.Type.TEXT){
+                isLastMessageBinary = false;
+            }else if(message.getType() == WebSocketMessage.Type.BINARY){
+                isLastMessageBinary = true;
+            }
+            onWebSocketMessage(message);
+        }, e->{
             e.printStackTrace();
             close();
         }, () -> close());
@@ -70,6 +82,10 @@ public abstract class WebSocketSessionBase extends WebSocketSessionEntity {
 
     public String getConnectionId() {
         return connectionId;
+    }
+
+    public boolean isLastMessageBinary() {
+        return isLastMessageBinary;
     }
 
     public URI getUri() {

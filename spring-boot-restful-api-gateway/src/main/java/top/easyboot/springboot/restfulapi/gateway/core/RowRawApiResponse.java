@@ -20,14 +20,8 @@ import java.util.Collection;
 public class RowRawApiResponse extends AbstractServerHttpResponse {
     private String requestId;
     protected RowRawEntity rawEntity;
-    public RowRawApiResponse(RowRawEntity rawEntity) {
-        this(rawEntity, new NettyDataBufferFactory(new UnpooledByteBufAllocator(false,false,false)));
-    }
     public RowRawApiResponse(DataBufferFactory dataBufferFactory) {
         this(new RowRawEntity(), dataBufferFactory);
-    }
-    public RowRawApiResponse() {
-        this(new RowRawEntity(), new NettyDataBufferFactory(new UnpooledByteBufAllocator(false,false,false)));
     }
     public RowRawApiResponse(RowRawEntity rawEntity, DataBufferFactory dataBufferFactory) {
         super(dataBufferFactory);
@@ -68,7 +62,12 @@ public class RowRawApiResponse extends AbstractServerHttpResponse {
         // Avoid .then() which causes data buffers to be released
         MonoProcessor<Void> completion = MonoProcessor.create();
 
-        body.subscribe(buffer -> {
+        body.reduce(bufferFactory().allocateBuffer(), (previous, current) -> {
+            previous.write(current);
+            DataBufferUtils.release(current);
+            ReferenceCountUtil.release(current);
+            return previous;
+        }).subscribe(buffer -> {
             byte[] pos = new byte[buffer.readableByteCount()];
             buffer.read(pos);
             rawEntity.setBody(pos);
