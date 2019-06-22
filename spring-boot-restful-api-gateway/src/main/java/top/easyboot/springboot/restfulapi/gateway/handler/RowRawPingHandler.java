@@ -42,6 +42,11 @@ public class RowRawPingHandler implements ISessionMessageHandler {
         pong(connectionId);
         return true;
     }
+    @Override
+    public void create(String connectionId) {
+        pingAuth(connectionId);
+    }
+
 
 
     protected void pong(String connectionId) {

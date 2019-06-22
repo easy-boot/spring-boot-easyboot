@@ -10,6 +10,7 @@ import org.springframework.web.reactive.DispatcherHandler;
 import org.springframework.web.reactive.socket.WebSocketMessage;
 import top.easyboot.core.rowraw.RowRawEntity;
 import top.easyboot.core.rowraw.RowRawUtil;
+import top.easyboot.springboot.restfulapi.gateway.core.WebSocketSessionBase;
 import top.easyboot.springboot.restfulapi.gateway.exception.SessionException;
 import top.easyboot.springboot.restfulapi.gateway.handler.RowRawApiHandler;
 import top.easyboot.springboot.restfulapi.gateway.handler.RowRawPingHandler;
@@ -51,6 +52,19 @@ public class SessionService extends SessionAbstractService  implements Applicati
     public SessionService(WebSocket webSocket, List<ISessionMessageHandler> handlers) {
         messageHandlers = handlers;
         connectionIdUtilInit(webSocket);
+    }
+
+    @Override
+    protected void onCreate(String connectionId) {
+        try {
+            for (ISessionMessageHandler messageHandler : messageHandlers) {
+                try {
+                    messageHandler.create(connectionId);
+                }catch (Throwable throwable){
+                }
+            }
+        }catch (Throwable throwable){
+        }
     }
 
     @Override

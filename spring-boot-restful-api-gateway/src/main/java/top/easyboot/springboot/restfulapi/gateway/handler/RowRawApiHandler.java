@@ -67,6 +67,10 @@ public class RowRawApiHandler implements ISessionMessageHandler {
     }
 
     @Override
+    public void create(String connectionId) {
+    }
+
+    @Override
     public boolean onRowRawMessage(String connectionId, RowRawEntity entity, boolean isBinary) {
 
         if (entity.getProtocol() == null || entity.getMethod() == null || !restfulProtocol.equals(entity.getProtocol())){

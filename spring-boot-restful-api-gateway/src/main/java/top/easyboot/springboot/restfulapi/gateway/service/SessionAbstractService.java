@@ -14,7 +14,7 @@ public abstract class SessionAbstractService extends HashMap<String, WebSocketSe
 
     abstract void onWebSocketMessage(String connectionId, WebSocketMessage message);
 
-
+    protected abstract void onCreate(String connectionId);
 
     @Override
     public WebSocketSessionBase remove(Object key) {
@@ -44,6 +44,8 @@ public abstract class SessionAbstractService extends HashMap<String, WebSocketSe
             };
             // 保存会话
             put(connectionId, session);
+            // 创建事件
+            onCreate(connectionId);
             // 绑定关闭事件
             session.onClose(()->{
                 if (containsKey(connectionId)){
