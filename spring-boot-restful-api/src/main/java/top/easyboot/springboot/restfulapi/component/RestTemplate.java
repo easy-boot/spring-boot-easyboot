@@ -11,7 +11,7 @@ import org.springframework.web.client.RestClientException;
 import top.easyboot.springboot.restfulapi.entity.RestfulApiException;
 import top.easyboot.springboot.restfulapi.exception.restTemplate.RpcException;
 import top.easyboot.springboot.restfulapi.http.converter.UrlencodedHttpMessageConverter;
-import top.easyboot.springboot.restfulapi.utils.Jackson;
+import top.easyboot.springboot.restfulapi.util.Jackson;
 
 import java.io.IOException;
 import java.net.URI;
@@ -43,7 +43,11 @@ public class RestTemplate extends org.springframework.web.client.RestTemplate {
             try {
                 throw new RpcException(Jackson.getObjectMapper().readValue(response.getBody(), RestfulApiException.class));
             }catch (IOException e){
-                e.printStackTrace();
+                RestfulApiException ae = new RestfulApiException();
+                ae.setMessage(e.getMessage());
+                ae.setExceptionId("RPC_FAIL");
+                ae.setStatsCode(500);
+                throw new RpcException(ae, e);
             }
         }
         super.handleResponse(url, method, response);

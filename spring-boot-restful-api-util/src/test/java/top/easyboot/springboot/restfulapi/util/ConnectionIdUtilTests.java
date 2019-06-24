@@ -34,6 +34,10 @@ public class ConnectionIdUtilTests {
     }
     @Test
     public void parseHex() {
-        System.out.println("==8:"+  ConnectionIdUtil.parse("40a030310000003"));
+        try {
+            System.out.println("==8:"+  ConnectionIdUtil.parse("40a030310000003"));
+        }catch (ConnectionIdUtil.Exception e){
+            e.printStackTrace();
+        }
     }
 }

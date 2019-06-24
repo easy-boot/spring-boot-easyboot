@@ -1,3 +1,6 @@
+dependencies{
+    compile project(':spring-boot-restful-api-util')
+}
 jar {
     enabled = true
     version = rootProject.getVersion()

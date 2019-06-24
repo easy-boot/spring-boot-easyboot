@@ -18,13 +18,13 @@ public interface IUserAuthAccessService {
      * @param accessKeyId 授权Id
      * @return 用户uid
      */
-    int getUid(String accessKeyId);
+    String getUid(String accessKeyId);
     /**
      * 修改授权Id关联的uid
      * @param accessKeyId 授权id
      * @param uid 用户uid
      */
-    void putUid(String accessKeyId, int uid);
+    void putUid(String accessKeyId, String uid);
 
     /**
      * 判断是否符合accessKeyId

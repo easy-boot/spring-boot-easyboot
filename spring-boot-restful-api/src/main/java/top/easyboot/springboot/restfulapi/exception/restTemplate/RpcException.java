@@ -5,6 +5,10 @@ import top.easyboot.springboot.restfulapi.entity.RestfulApiException;
 
 public class RpcException extends RestClientException {
     private RestfulApiException restfulApiException;
+    public RpcException(RestfulApiException e, Throwable throwable){
+        super(e.getMessage(), throwable);
+        restfulApiException = e;
+    }
     public RpcException(RestfulApiException e){
         super(e.getMessage());
         restfulApiException = e;

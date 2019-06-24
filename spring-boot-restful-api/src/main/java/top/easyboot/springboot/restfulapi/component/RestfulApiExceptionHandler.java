@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.HandlerMethod;
 import top.easyboot.springboot.restfulapi.entity.RestfulApiException;
+import top.easyboot.springboot.restfulapi.exception.ApiException;
 import top.easyboot.springboot.restfulapi.exception.restTemplate.RpcException;
 
 import javax.servlet.http.HttpServletResponse;
@@ -32,8 +33,8 @@ public class RestfulApiExceptionHandler {
 
         res.setMessage(e.getMessage());
 
-        if (e instanceof top.easyboot.springboot.restfulapi.exception.Exception){
-            top.easyboot.springboot.restfulapi.exception.Exception et = (top.easyboot.springboot.restfulapi.exception.Exception) e;
+        if (e instanceof ApiException){
+            ApiException et = (ApiException) e;
 
             res.setExceptionId(et.getExceptionId());
             res.setStatsCode(et.getStatsCode());

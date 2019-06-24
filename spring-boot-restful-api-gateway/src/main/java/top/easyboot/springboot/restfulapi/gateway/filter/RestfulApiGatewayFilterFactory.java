@@ -85,7 +85,6 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
              * 设置uid为0
              * 也就是没有登录的意思
              */
-            operate.setUid(0);
             operate.setLanguageId(0);
             operate.setClientIpV4(getIpAddr(requestOrigin));
 
@@ -204,9 +203,9 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
                     }
                     sessionService.refreshBindUid(connectionId, uidOutput);
                     if ((uidInput.isEmpty()||uidInput.equals("0"))&&!uidOutput.isEmpty()&&!uidOutput.equals("0")){
-                        userAuthAccessService.putUid(authorization.getAccessKeyId(), Integer.valueOf(uidOutput));
+                        userAuthAccessService.putUid(authorization.getAccessKeyId(), uidOutput);
                     }else if(!uidInput.isEmpty()&&!uidInput.equals("0")&&(uidOutput.isEmpty()||uidOutput.equals("0"))){
-                        userAuthAccessService.putUid(authorization.getAccessKeyId(), 0);
+                        userAuthAccessService.putUid(authorization.getAccessKeyId(), "");
                     }
                 }
                 /**

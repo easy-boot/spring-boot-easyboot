@@ -12,8 +12,6 @@ import top.easyboot.springboot.operate.exception.OperateException;
 import top.easyboot.springboot.operate.utils.GetOperate;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.List;
 
 
 public class OperateInfoResolver implements HandlerMethodArgumentResolver {
@@ -57,8 +55,10 @@ public class OperateInfoResolver implements HandlerMethodArgumentResolver {
                 }else if(operateUidAnnotation.isCheck()){
                     throw createNoLoginException(parameter);
                 }
-                if (parameter.getParameterType().isAssignableFrom(String.class)){
-                    return String.valueOf(operateUidAnnotation.uid());
+                if (parameter.getParameterType().isAssignableFrom(int.class) || parameter.getParameterType().isAssignableFrom(Integer.class)){
+                    return Integer.valueOf(operateUidAnnotation.uid());
+                }else if (parameter.getParameterType().isAssignableFrom(long.class)){
+                    return Long.valueOf(operateUidAnnotation.uid());
                 }
                 return operateUidAnnotation.uid();
             }

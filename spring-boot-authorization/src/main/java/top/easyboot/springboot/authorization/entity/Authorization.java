@@ -2,7 +2,7 @@ package top.easyboot.springboot.authorization.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import top.easyboot.springboot.authorization.utils.Jackson;
+import top.easyboot.springboot.restfulapi.util.Jackson;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Authorization {
@@ -49,8 +49,6 @@ public class Authorization {
             try {
                 authorization = Jackson.getObjectMapper().readValue(infoStr, Authorization.class);
             }catch (Exception e){
-                // todo
-                System.out.println(e);
             }
         }
         if (authorization == null){

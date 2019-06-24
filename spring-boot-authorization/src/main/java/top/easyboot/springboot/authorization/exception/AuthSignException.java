@@ -1,11 +1,11 @@
 package top.easyboot.springboot.authorization.exception;
 
 import top.easyboot.springboot.authorization.interfaces.exception.IAuthSignException;
-import top.easyboot.springboot.restfulapi.exception.Exception;
+import top.easyboot.springboot.restfulapi.exception.ApiException;
 
 import java.util.HashMap;
 
-public class AuthSignException extends Exception implements IAuthSignException {
+public class AuthSignException extends ApiException implements IAuthSignException {
     public AuthSignException(int inputId, Throwable cause){
         super(inputId, cause);
         this.setStatsCode(403);

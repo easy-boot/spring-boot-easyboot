@@ -10,7 +10,7 @@ public @interface OperateUid {
      * 在没有登录的情况下，如果没有强制验证，就返回默认值
      * @return
      */
-    int uid() default 0;
+    String uid() default "";
 
     /**
      * 是否强制验证登录状态

@@ -3,14 +3,14 @@ package top.easyboot.springboot.operate.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import top.easyboot.springboot.operate.utils.Jackson;
+import top.easyboot.springboot.restfulapi.util.Jackson;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Operate {
     /**
      * 操作uid
      */
-    protected int uid = 0;
+    protected String uid = "";
     /**
      * 语言id
      */
@@ -29,11 +29,11 @@ public class Operate {
      */
     protected String connectionId;
 
-    public int getUid() {
+    public String getUid() {
         return uid;
     }
 
-    public void setUid(int uid) {
+    public void setUid(String uid) {
         this.uid = uid;
     }
 
@@ -74,7 +74,10 @@ public class Operate {
      */
     @JsonProperty("isLogin")
     public boolean isLogin(){
-        return this.uid != 0;
+        if (uid == null || uid.isEmpty()){
+            return false;
+        }
+        return !this.uid.equals("0");
     }
 
     public static Operate create(String infoStr){
@@ -83,8 +86,6 @@ public class Operate {
             try {
                 operate = Jackson.getObjectMapper().readValue(infoStr, Operate.class);
             }catch (Exception e){
-                // todo
-                e.printStackTrace();
             }
         }
         if (operate == null){

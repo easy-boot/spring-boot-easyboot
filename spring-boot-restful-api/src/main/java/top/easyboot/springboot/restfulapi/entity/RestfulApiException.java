@@ -3,7 +3,7 @@ package top.easyboot.springboot.restfulapi.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import top.easyboot.springboot.restfulapi.utils.Jackson;
+import top.easyboot.springboot.restfulapi.util.Jackson;
 
 import java.util.HashMap;
 import java.util.Iterator;

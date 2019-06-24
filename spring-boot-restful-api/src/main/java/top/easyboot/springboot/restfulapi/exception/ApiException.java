@@ -1,6 +1,5 @@
 package top.easyboot.springboot.restfulapi.exception;
 
-
 import top.easyboot.springboot.restfulapi.annotation.ExampleMessage;
 import top.easyboot.springboot.restfulapi.entity.RestfulApiException;
 
@@ -8,7 +7,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 
-public class Exception extends java.lang.Exception {
+public class ApiException extends java.lang.Exception {
     private int statsCode = 400;
     private HashMap messageData;
     private RestfulApiException restfulApiException;
@@ -18,18 +17,18 @@ public class Exception extends java.lang.Exception {
         return ++lastExceptionId;
     }
 
-    public Exception(int inputId, HashMap messageData, Throwable cause){
+    public ApiException(int inputId, HashMap messageData, Throwable cause){
         this(inputId, cause);
         this.setMessageData(messageData);
     }
-    public Exception(int inputId, HashMap messageData){
+    public ApiException(int inputId, HashMap messageData){
         this(inputId);
         this.setMessageData(messageData);
     }
-    public Exception(RestfulApiException e){
+    public ApiException(RestfulApiException e){
         restfulApiException = e;
     }
-    public Exception(int inputId){
+    public ApiException(int inputId){
         super();
         String id = String.valueOf(inputId);
         if (!messageMap.containsKey(id)){
@@ -37,7 +36,7 @@ public class Exception extends java.lang.Exception {
         }
         restfulApiException = messageMap.containsKey(id)?messageMap.get(id) : new RestfulApiException();
     }
-    public Exception(int inputId, Throwable cause){
+    public ApiException(int inputId, Throwable cause){
         super(cause);
         String id = String.valueOf(inputId);
         if (!messageMap.containsKey(id)){

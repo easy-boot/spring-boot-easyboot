@@ -2,10 +2,7 @@ package top.easyboot.springboot.restfulapi.gateway.handler;
 
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.util.ReferenceCountUtil;
-import org.reactivestreams.Publisher;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
 import org.springframework.http.HttpCookie;
@@ -23,7 +20,7 @@ import reactor.core.publisher.Flux;
 import top.easyboot.core.rowraw.RowRawEntity;
 import top.easyboot.core.rowraw.RowRawUtil;
 import top.easyboot.springboot.restfulapi.entity.RestfulApiException;
-import top.easyboot.springboot.restfulapi.exception.Exception;
+import top.easyboot.springboot.restfulapi.exception.ApiException;
 import top.easyboot.springboot.restfulapi.gateway.core.RowRawApiExchange;
 import top.easyboot.springboot.restfulapi.gateway.core.RowRawApiRequest;
 import top.easyboot.springboot.restfulapi.gateway.core.RowRawApiResponse;
@@ -189,8 +186,8 @@ public class RowRawApiHandler implements ISessionMessageHandler {
         final HttpStatus httpStatus = HttpStatus.resolve(500);
         res.setStatsCode(httpStatus.value());
         res.setMessage(throwable.getMessage());
-        if (throwable instanceof Exception){
-            Exception et = (Exception) throwable;
+        if (throwable instanceof ApiException){
+            ApiException et = (ApiException) throwable;
             res.setExceptionId(et.getExceptionId());
             res.setStatsCode(et.getStatsCode());
         }

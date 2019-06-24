@@ -1,5 +1,6 @@
 dependencies{
     compile project(':spring-boot-restful-api')
+    compile project(':spring-boot-restful-api-util')
     compile 'joda-time:joda-time:2.10.2'
 }
 jar {
