@@ -26,27 +26,33 @@ public abstract class WebSocketSessionAbstract extends WebSocketSessionBase {
         compositeClose.add(d);
     }
 
+    private synchronized boolean isCloseableAndClose(){
+        final boolean is = isCloseable;
+        isCloseable = false;
+        return is;
+    }
+
     public void close(){
-        if (!isCloseable){
+        if (!isCloseableAndClose()){
             return;
         }
-        isCloseable = false;
-        try {
-            compositeClose.dispose();
-        }catch (Throwable e){
+        if (!compositeClose.isDisposed()){
+            try {
+                compositeClose.dispose();
+            }catch (Throwable e){
 
-        }
-        try {
-            if (!sink.isCancelled()){
-                sink.complete();
             }
-        }catch (Throwable e){
-
         }
-        try {
-            session.close();
-        }catch (Throwable e){
+        if (!sink.isCancelled()){
+            try {
+                session.close();
+            }catch (Throwable e){
+            }
+            try {
+                sink.complete();
+            }catch (Throwable e){
 
+            }
         }
     }
 
