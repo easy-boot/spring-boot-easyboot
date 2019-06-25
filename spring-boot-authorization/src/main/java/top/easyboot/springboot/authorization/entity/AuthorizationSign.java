@@ -9,10 +9,6 @@ public class AuthorizationSign {
      */
     private String delimiter;
     /**
-     * 处理驱动类名
-     */
-    private String className;
-    /**
      * 授权版本号
      */
     private String authVersion;
@@ -63,14 +59,6 @@ public class AuthorizationSign {
 
     public void setDelimiter(String delimiter) {
         this.delimiter = delimiter;
-    }
-
-    public String getClassName() {
-        return className;
-    }
-
-    public void setClassName(String className) {
-        this.className = className;
     }
 
     public String getAuthVersion() {

@@ -4,15 +4,23 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import top.easyboot.springboot.operate.annotation.OperateVerifyLogin;
 import top.easyboot.springboot.operate.entity.Operate;
+import top.easyboot.springboot.operate.exception.NotLoginException;
+import top.easyboot.springboot.operate.property.RestfulApiOperateProperties;
 import top.easyboot.springboot.operate.utils.GetOperate;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class OperateInterceptor implements HandlerInterceptor {
-
+    private RestfulApiOperateProperties properties;
+    public OperateInterceptor(RestfulApiOperateProperties operateProperties){
+        properties = operateProperties;
+    }
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        if (!properties.isEnabled()){
+            return true;
+        }
         /**
          * 操作者信息
          */
@@ -47,6 +55,6 @@ public class OperateInterceptor implements HandlerInterceptor {
         /**
          * 没有登录，需要登录
          */
-        throw new Exception("需要登录");
+        throw NotLoginException.create(null);
     }
 }

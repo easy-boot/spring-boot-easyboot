@@ -1,53 +1,37 @@
 package top.easyboot.springboot.authorization.interceptor;
 
-import org.springframework.context.ApplicationContext;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
-import top.easyboot.springboot.authorization.annotation.EnableAuthorization;
 import top.easyboot.springboot.authorization.annotation.VerifyAuthorization;
 import top.easyboot.springboot.authorization.entity.Authorization;
 import top.easyboot.springboot.authorization.exception.AuthSignException;
+import top.easyboot.springboot.authorization.property.RestfulApiAuthProperties;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class AuthorizationInterceptor implements HandlerInterceptor {
-    // Spring应用上下文环境
-    private static ApplicationContext applicationContext;
-    private static boolean isAllVerify = false;
-    /*
-     * 实现了ApplicationContextAware 接口，必须实现该方法；
-     *通过传递applicationContext参数初始化成员变量applicationContext
-     */
+    // 配置
+    private static RestfulApiAuthProperties authProperties;
 
-    public AuthorizationInterceptor(ApplicationContext context) {
-        applicationContext = context;
-        //获取@EnableAuthorization注解的所有bean
-        EnableAuthorization enableAuthorization = null;
-        for (String className : context.getBeanNamesForAnnotation(EnableAuthorization.class)) {
-            Object app = context.getBean(className);
-            if (app!= null && app instanceof Object){
-                enableAuthorization = AnnotationUtils.findAnnotation(app.getClass(),EnableAuthorization.class);
-                if (enableAuthorization !=null){
-                    isAllVerify = enableAuthorization.isAllVerify();
-                    break;
-                }
-            }
-        }
+    public AuthorizationInterceptor(RestfulApiAuthProperties properties) {
+        authProperties = properties;
     }
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-
+        // 不验证
+        if (!authProperties.isEnabled()){
+            return true;
+        }
         //1.不是HandlerMethod类型，则无需检查"
         if(!(handler instanceof HandlerMethod)){
             return true;
         }
         HandlerMethod method = (HandlerMethod)handler;
-        boolean hasAuthAnnotation = isAllVerify || (method.getMethod().isAnnotationPresent(VerifyAuthorization.class) || method.getMethod().getDeclaringClass().isAnnotationPresent(VerifyAuthorization.class));
+        boolean hasAuthAnnotation = authProperties.isAllVerify() || (method.getMethod().isAnnotationPresent(VerifyAuthorization.class) || method.getMethod().getDeclaringClass().isAnnotationPresent(VerifyAuthorization.class));
 
-        // 不存在OperateLoginRequired注解，则直接通过，放弃切面
+        // 不存在@VerifyAuthorization注解，则直接通过，放弃切面
         if(!hasAuthAnnotation){
             return true;
         }
@@ -65,15 +49,16 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
          * 操作者信息
          */
         Authorization authorization;
-        Object tryAuthorization = request.getAttribute("easyboot-authorization");
+        final String requestAttribute = authProperties.getRequestAttribute();
+        final Object tryAuthorization = request.getAttribute(requestAttribute);
         if (tryAuthorization instanceof Authorization){
             authorization = (Authorization)tryAuthorization;
         }else{
-            authorization = Authorization.create(request.getHeader("x-easyboot-authorization"));
+            authorization = Authorization.create(request.getHeader(authProperties.getSignHeaderKey()));
             /**
              * 存储操作者信息
              */
-            request.setAttribute("easyboot-authorization", authorization);
+            request.setAttribute(requestAttribute, authorization);
         }
         return authorization;
     }

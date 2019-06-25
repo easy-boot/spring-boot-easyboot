@@ -20,12 +20,6 @@ public @interface OperateInfo {
     String clientIpV4() default "0.0.0.0";
 
     /**
-     * 默认语言id
-     * @return
-     */
-    int languageId() default 0;
-
-    /**
      * 是否强制验证登录状态
      * @return
      */

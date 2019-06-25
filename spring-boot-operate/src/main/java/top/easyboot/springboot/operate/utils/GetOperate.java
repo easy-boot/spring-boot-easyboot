@@ -2,11 +2,12 @@ package top.easyboot.springboot.operate.utils;
 
 import org.springframework.web.context.request.NativeWebRequest;
 import top.easyboot.springboot.operate.entity.Operate;
+import top.easyboot.springboot.operate.exception.OperateException;
 
 import javax.servlet.http.HttpServletRequest;
 
 public class GetOperate {
-    public static Operate get(HttpServletRequest request){
+    public static Operate get(HttpServletRequest request) throws OperateException {
         /**
          * 操作者信息
          */
@@ -23,7 +24,7 @@ public class GetOperate {
         }
         return operate;
     }
-    public static Operate get(NativeWebRequest request){
+    public static Operate get(NativeWebRequest request) throws OperateException {
         /**
          * 操作者信息
          */

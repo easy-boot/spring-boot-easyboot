@@ -1,5 +1,6 @@
 package top.easyboot.springboot.authorization.component;
 
+import top.easyboot.springboot.authorization.drives.EasyBootAuthV1;
 import top.easyboot.springboot.authorization.entity.Authorization;
 import top.easyboot.springboot.authorization.entity.AuthorizationInput;
 import top.easyboot.springboot.authorization.entity.AuthorizationSign;
@@ -8,10 +9,7 @@ import top.easyboot.springboot.authorization.exception.AuthSignException;
 import top.easyboot.springboot.authorization.interfaces.core.IAuthClient;
 import top.easyboot.springboot.authorization.utils.Str;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,16 +21,21 @@ public class AuthClient implements IAuthClient {
     /**
      * 缓存授权驱动对象
      */
-    protected HashMap<String, AuthSignDrive> authSignDriveMap = new HashMap<>();
+    protected Map<String, AuthSignDrive> authSignDriveMap;
 
-    /**
-     * 驱动
-     */
-    protected Set<String> drives = new TreeSet();
+    private Pattern linePattern = Pattern.compile("-(\\w)");
 
     public AuthClient(Storage storage){
-        this.storage = storage;
-        this.drives.add("top.easyboot.springboot.authorization.drives.");
+        this(storage, new HashMap<>());
+        EasyBootAuthV1 easyBootAuthV1 = new EasyBootAuthV1();
+        authSignDriveMap.put("easyBootAuthV1", easyBootAuthV1);
+        authSignDriveMap.put("easybootAuthV1", easyBootAuthV1);
+        authSignDriveMap.put("easyboot-auth-v1", easyBootAuthV1);
+        authSignDriveMap.put("easy-boot-auth-v1", easyBootAuthV1);
+    }
+    public AuthClient(Storage s, Map<String, AuthSignDrive> driveMap){
+        storage = s;
+        authSignDriveMap = driveMap;
     }
     /**
      * 获取一个授权对象
@@ -84,15 +87,35 @@ public class AuthClient implements IAuthClient {
         if (authVersion==null || authVersion.isEmpty()){
             throw new AuthSignException(AuthSignException.E_AUTHENTICATION_VERSION_ERROR);
         }
-        Pattern linePattern = Pattern.compile("-(\\w)");
 
-        Matcher matcher = linePattern.matcher(authVersion);
-        StringBuffer sb = new StringBuffer();
-        while (matcher.find()) {
-            matcher.appendReplacement(sb, matcher.group(1).toUpperCase());
+        HashMap md = new HashMap();
+        md.put("className", authVersion);
+        /**
+         * 获取授权签名服务
+         */
+        AuthSignDrive drive;
+        if (authSignDriveMap.containsKey(authVersion)){
+            drive = authSignDriveMap.get(authVersion);
+        }else{
+            Matcher matcher = linePattern.matcher(authVersion);
+            StringBuffer sb = new StringBuffer();
+            while (matcher.find()) {
+                matcher.appendReplacement(sb, matcher.group(1).toUpperCase());
+            }
+            matcher.appendTail(sb);
+            String className = sb.toString();
+            if (authSignDriveMap.containsKey(className)){
+                drive = authSignDriveMap.get(className);
+            }else if(authSignDriveMap.containsKey(Str.toUpperCaseFirstOne(className))){
+                drive = authSignDriveMap.get(Str.toUpperCaseFirstOne(className));
+            }else{
+                throw new AuthSignException(AuthSignException.E_AUTHENTICATION_VERSION_CLASS_NOT_FIND, md);
+            }
         }
-        matcher.appendTail(sb);
-        String className = Str.toUpperCaseFirstOne(sb.toString());
+        if (!(drive instanceof AuthSignDrive)){
+            throw new AuthSignException(AuthSignException.E_AUTHENTICATION_CLASS_INSTANCE_ERROR, md);
+        }
+
 
         /**
          * 实例化授权模型
@@ -103,16 +126,10 @@ public class AuthClient implements IAuthClient {
          * 设置授权信息
          */
         authorizationSign.setDelimiter(delimiter);
-        authorizationSign.setClassName(className);
         authorizationSign.setAuthVersion(authVersion);
         authorizationSign.setAuthValue(authValue);
         authorizationSign.setInput(authorizationInput);
         authorizationSign.setStorage(storage);
-
-        /**
-         * 获取授权签名服务
-         */
-        AuthSignDrive drive = getAuthSignDrive(className);
         /**
          * 检查授权信息
          */
@@ -122,46 +139,6 @@ public class AuthClient implements IAuthClient {
          * 返回授权信息
          */
         return authorizationSign.getAuthorization();
-    }
-    public AuthSignDrive getAuthSignDrive(String className) throws AuthSignException {
-        if (className.isEmpty() || className == null){
-            throw new AuthSignException(AuthSignException.E_AUTHENTICATION_INFO_ERROR);
-        }
-        if (!authSignDriveMap.containsKey(className)){
-            HashMap md = new HashMap();
-            md.put("className", className);
-            Class authClass = null;
-
-            for (String drive : this.drives) {
-                try {
-                    authClass = Class.forName(drive + className);
-                    if (authClass!= null){
-                        break;
-                    }
-                }catch (ClassNotFoundException e){}
-            }
-            if (authClass == null){
-                throw new AuthSignException(AuthSignException.E_AUTHENTICATION_VERSION_CLASS_NOT_FIND, md);
-            }
-
-            if (!AuthSignDrive.class.isAssignableFrom(authClass)){
-                throw new AuthSignException(AuthSignException.E_AUTHENTICATION_CLASS_INSTANCE_ERROR, md);
-            }
-
-            try {
-                authSignDriveMap.put(className, (AuthSignDrive)authClass.newInstance());
-            }catch (InstantiationException e){
-                AuthSignException et = new AuthSignException(AuthSignException.E_AUTHENTICATION_CLASS_INSTANCE_ERROR, md);
-                et.setStackTrace(e.getStackTrace());
-                throw et;
-            } catch (IllegalAccessException e) {
-                AuthSignException et = new AuthSignException(AuthSignException.E_AUTHENTICATION_CLASS_INSTANCE_ERROR, md);
-                et.setStackTrace(e.getStackTrace());
-                throw et;
-            }
-        }
-
-        return authSignDriveMap.get(className);
     }
     public interface Storage{
         /**

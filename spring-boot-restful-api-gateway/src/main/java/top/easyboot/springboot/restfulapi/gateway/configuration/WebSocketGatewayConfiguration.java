@@ -10,7 +10,7 @@ import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.server.support.WebSocketHandlerAdapter;
 import top.easyboot.springboot.restfulapi.gateway.core.WebSocketGatewayHandler;
-import top.easyboot.springboot.restfulapi.gateway.interfaces.handler.WebSocketGatewayIHandler;
+import top.easyboot.springboot.restfulapi.gateway.interfaces.handler.IWebSocketGatewayHandler;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.service.ISessionService;
 import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties;
 import top.easyboot.springboot.restfulapi.gateway.service.SessionService;
@@ -25,12 +25,12 @@ public class WebSocketGatewayConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(name = "easybootRestfulApiHandlerMapping")
-    public HandlerMapping easybootRestfulApiHandlerMapping(WebSocketGatewayIHandler handler) {
+    public HandlerMapping easybootRestfulApiHandlerMapping(IWebSocketGatewayHandler handler) {
         return handler.getHandlerMapping();
     }
     @Bean
     @ConditionalOnMissingBean(name = "easybootRestfulApiWebSocketHandler")
-    public WebSocketHandler easybootRestfulApiWebSocketHandler(WebSocketGatewayIHandler handler) {
+    public WebSocketHandler easybootRestfulApiWebSocketHandler(IWebSocketGatewayHandler handler) {
         return handler.getWebSocketHandler();
     }
 
@@ -40,8 +40,8 @@ public class WebSocketGatewayConfiguration {
         return new WebSocketHandlerAdapter();
     }
     @Bean
-    @ConditionalOnMissingBean(WebSocketGatewayIHandler.class)
-    public WebSocketGatewayIHandler easybootWebSocketHandler(ISessionService sessionService) {
+    @ConditionalOnMissingBean(IWebSocketGatewayHandler.class)
+    public IWebSocketGatewayHandler easybootWebSocketHandler(ISessionService sessionService) {
         return new WebSocketGatewayHandler(sessionService);
     }
 

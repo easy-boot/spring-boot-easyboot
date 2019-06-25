@@ -3,7 +3,6 @@ package top.easyboot.springboot.restfulapi.gateway.property;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import java.net.URL;
 
 @Component
 @ConfigurationProperties("easyboot.restfulapi.gateway")
@@ -12,26 +11,6 @@ public class RestfulApiGatewayProperties {
      * 是否启用
      */
     private boolean enabled = false;
-    /**
-     * 操作者头信息key
-     */
-    private String operateHeaderKey = "x-easyboot-operate-info";
-    /**
-     * 授权签名头信息key
-     */
-    private String authSignHeaderKey = "x-easyboot-authorization";
-    /**
-     * uid更新输出头信息key
-     */
-    private String uidUpdateHeaderKey = "x-easyboot-update-operate-uid";
-    /**
-     * 自动移除uid更新头
-     */
-    private boolean uidUpdateHeaderAutoRemove = true;
-    /**
-     * 签名头前缀
-     */
-    private String authSignHeaderPrefix = "x-easycms-";
 
     private WebSocket webSocket;
 
@@ -116,46 +95,6 @@ public class RestfulApiGatewayProperties {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
-    }
-
-    public boolean isUidUpdateHeaderAutoRemove() {
-        return uidUpdateHeaderAutoRemove;
-    }
-
-    public void setUidUpdateHeaderAutoRemove(boolean uidUpdateHeaderAutoRemove) {
-        this.uidUpdateHeaderAutoRemove = uidUpdateHeaderAutoRemove;
-    }
-
-    public String getAuthSignHeaderPrefix() {
-        return authSignHeaderPrefix;
-    }
-
-    public void setAuthSignHeaderPrefix(String authSignHeaderPrefix) {
-        this.authSignHeaderPrefix = authSignHeaderPrefix;
-    }
-
-    public String getOperateHeaderKey() {
-        return operateHeaderKey;
-    }
-
-    public String getUidUpdateHeaderKey() {
-        return uidUpdateHeaderKey;
-    }
-
-    public void setUidUpdateHeaderKey(String uidUpdateHeaderKey) {
-        this.uidUpdateHeaderKey = uidUpdateHeaderKey;
-    }
-
-    public void setOperateHeaderKey(String operateHeaderKey) {
-        this.operateHeaderKey = operateHeaderKey;
-    }
-
-    public String getAuthSignHeaderKey() {
-        return authSignHeaderKey;
-    }
-
-    public void setAuthSignHeaderKey(String authSignHeaderKey) {
-        this.authSignHeaderKey = authSignHeaderKey;
     }
 
     public WebSocket getWebSocket() {

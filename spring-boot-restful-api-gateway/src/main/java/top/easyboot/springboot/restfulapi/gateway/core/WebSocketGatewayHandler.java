@@ -7,7 +7,7 @@ import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.reactive.handler.SimpleUrlHandlerMapping;
 import org.springframework.web.reactive.socket.WebSocketHandler;
 import top.easyboot.springboot.restfulapi.gateway.exception.SessionException;
-import top.easyboot.springboot.restfulapi.gateway.interfaces.handler.WebSocketGatewayIHandler;
+import top.easyboot.springboot.restfulapi.gateway.interfaces.handler.IWebSocketGatewayHandler;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.service.ISessionService;
 import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties;
 import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties.WebSocket;
@@ -15,7 +15,7 @@ import org.springframework.web.reactive.socket.WebSocketSession;
 import java.util.*;
 
 @Component
-public class WebSocketGatewayHandler implements WebSocketGatewayIHandler {
+public class WebSocketGatewayHandler implements IWebSocketGatewayHandler {
     /**
      * 配置文件
      */

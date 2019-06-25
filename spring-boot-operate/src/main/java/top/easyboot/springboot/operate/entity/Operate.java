@@ -3,18 +3,20 @@ package top.easyboot.springboot.operate.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import top.easyboot.springboot.operate.exception.NotLoginException;
+import top.easyboot.springboot.operate.exception.OperateException;
+import top.easyboot.springboot.operate.interfaces.exception.IOperateException;
 import top.easyboot.springboot.restfulapi.util.Jackson;
+
+import java.lang.reflect.Method;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Operate {
+    static Class<Operate> operateClass = Operate.class;
     /**
      * 操作uid
      */
     protected String uid = "";
-    /**
-     * 语言id
-     */
-    protected int languageId = 0;
     /**
      * 获取客户端ip
      */
@@ -37,13 +39,6 @@ public class Operate {
         this.uid = uid;
     }
 
-    public int getLanguageId() {
-        return languageId;
-    }
-
-    public void setLanguageId(int languageId) {
-        this.languageId = languageId;
-    }
     public String getClientIpV4() {
         return clientIpV4;
     }
@@ -80,16 +75,22 @@ public class Operate {
         return !this.uid.equals("0");
     }
 
-    public static Operate create(String infoStr){
-        Operate operate = null;
-        if (infoStr != null && !infoStr.isEmpty() && infoStr != ""){
+    public static Operate create(String infoStr) throws OperateException {
+        Operate operate;
+        try{
             try {
-                operate = Jackson.getObjectMapper().readValue(infoStr, Operate.class);
+                if (infoStr != null && !infoStr.isEmpty() && infoStr != ""){
+                    operate = Jackson.getObjectMapper().readValue(infoStr, operateClass);
+                }else{
+                    operate = operateClass.newInstance();
+                }
             }catch (Exception e){
+                operate = operateClass.newInstance();
             }
-        }
-        if (operate == null){
-            operate = new Operate();
+        }catch (InstantiationException ei){
+            throw new OperateException(OperateException.E_INSTANTIATION_EXCEPTION, ei);
+        }catch (IllegalAccessException ea){
+            throw new OperateException(OperateException.E_ILLEGAL_ACCESS_EXCEPTION, ea);
         }
         return operate;
     }

@@ -16,6 +16,8 @@ import top.easyboot.springboot.authorization.entity.Authorization;
 import top.easyboot.springboot.authorization.entity.AuthorizationInput;
 import top.easyboot.springboot.authorization.exception.AuthSignException;
 import top.easyboot.springboot.authorization.interfaces.core.IAuthClient;
+import top.easyboot.springboot.authorization.property.RestfulApiAuthProperties;
+import top.easyboot.springboot.operate.property.RestfulApiOperateProperties;
 import top.easyboot.springboot.restfulapi.gateway.core.RowRawApiRequest;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.service.ISessionService;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.service.IUserAuthAccessService;
@@ -36,6 +38,10 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
     private static final Log logger = LogFactory.getLog(RestfulApiGatewayFilterFactory.class);
     @Autowired
     private RestfulApiGatewayProperties properties;
+    @Autowired
+    private RestfulApiAuthProperties authProperties;
+    @Autowired
+    private RestfulApiOperateProperties operateProperties;
     @Autowired(required = false)
     private IUserAuthAccessService userAuthAccessService;
     @Autowired
@@ -74,18 +80,14 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
              * 清理操作者信息，防止注入
              */
             requestBuilder.headers(httpHeaders -> {
-                httpHeaders.remove(properties.getOperateHeaderKey());
-                httpHeaders.remove(properties.getAuthSignHeaderKey());
+                httpHeaders.remove(operateProperties.getHeaderKey());
+                httpHeaders.remove(authProperties.getSignHeaderKey());
             });
             /**
              * 实例化一个操作信息对象
              */
             final Operate operate = new Operate();
-            /**
-             * 设置uid为0
-             * 也就是没有登录的意思
-             */
-            operate.setLanguageId(0);
+            // 设置ip
             operate.setClientIpV4(getIpAddr(requestOrigin));
 
 
@@ -115,7 +117,7 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
             /**
              * 授权头签字
              */
-            ai.setAuthSignHeadersPrefix(properties.getAuthSignHeaderPrefix());
+            ai.setAuthSignHeadersPrefix(authProperties.getSignHeaderPrefix());
 
             /**
              * 先定义一个变量来接收授权数据
@@ -174,11 +176,11 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
             /**
              * 序列化操作者信息并且设置到请求构建器中
              */
-            requestBuilder.header(properties.getOperateHeaderKey(), operate.toString());
+            requestBuilder.header(operateProperties.getHeaderKey(), operate.toString());
             /**
              * authorization信息
              */
-            requestBuilder.header(properties.getAuthSignHeaderKey(), authorization.toString());
+            requestBuilder.header(authProperties.getSignHeaderKey(), authorization.toString());
             /**
              * 构建请求对象，并且构建一个exchange传递到下一个过滤器
              */
@@ -192,20 +194,22 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
                  */
                 ServerHttpResponse response = exchange.getResponse();
                 HttpHeaders responseHeaders = response.getHeaders();
-                List<String> uids = responseHeaders.get(properties.getUidUpdateHeaderKey());
+                List<String> uids = responseHeaders.get(operateProperties.getUidUpdateHeaderKey());
                 if (uids != null && uids.size() > 0){
+                    // 取得进入的时候的uid
                     String uidInput = String.valueOf(operate.getUid());
+                    // 取得最后一次的uid
                     String uidOutput = uids.get(uids.size()-1);
-
-                    // todo
-                    if (properties.isUidUpdateHeaderAutoRemove()){
-                        responseHeaders.remove(properties.getUidUpdateHeaderKey());
+                    if (operateProperties.isUidUpdateHeaderAutoRemove()){
+                        responseHeaders.remove(operateProperties.getUidUpdateHeaderKey());
                     }
                     sessionService.refreshBindUid(connectionId, uidOutput);
-                    if ((uidInput.isEmpty()||uidInput.equals("0"))&&!uidOutput.isEmpty()&&!uidOutput.equals("0")){
+                    if ((uidInput == null || uidInput.isEmpty()) && uidOutput != null && !uidOutput.isEmpty()){
                         userAuthAccessService.putUid(authorization.getAccessKeyId(), uidOutput);
-                    }else if(!uidInput.isEmpty()&&!uidInput.equals("0")&&(uidOutput.isEmpty()||uidOutput.equals("0"))){
+                    }else if(uidInput != null && !uidInput.isEmpty() && (uidOutput == null || uidOutput.isEmpty())){
                         userAuthAccessService.putUid(authorization.getAccessKeyId(), "");
+                    }else if (uidInput != null && uidOutput != null && !uidInput.isEmpty() && !uidInput.equals(uidOutput)){
+                        userAuthAccessService.putUid(authorization.getAccessKeyId(), uidOutput);
                     }
                 }
                 /**

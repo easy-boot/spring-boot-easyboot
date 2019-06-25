@@ -1,13 +1,9 @@
 package top.easyboot.springboot.restfulapi.gateway.configuration;
 
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Description;
@@ -30,7 +26,7 @@ public class RestfulApiFilterConfiguration{
     @Description("Auto use easyboot auth client")
     @ConditionalOnMissingBean(IAuthClient.class)
     @ConditionalOnBean(IUserAuthAccessService.class)
-    public IAuthClient easybootAuthClient(IUserAuthAccessService accessService){
+    public IAuthClient easybootAuthClient(final IUserAuthAccessService accessService){
         return new AuthClient(new AuthClient.Storage(){
             @Override
             public String get(String accessKeyId) {

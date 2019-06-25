@@ -27,7 +27,7 @@ public class Sha256Signer {
     /**
      * 授权版本
      */
-    protected String authVersion = "app-auth-v2";
+    protected String authVersion = "easyboot-auth-v1";
     /**
      * 授权id
      */
