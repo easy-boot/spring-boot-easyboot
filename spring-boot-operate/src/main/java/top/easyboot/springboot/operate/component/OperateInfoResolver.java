@@ -7,27 +7,12 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import top.easyboot.springboot.operate.annotation.OperateInfo;
 import top.easyboot.springboot.operate.annotation.OperateUid;
-import top.easyboot.springboot.operate.configuration.OperateConfiguration;
 import top.easyboot.springboot.operate.entity.Operate;
 import top.easyboot.springboot.operate.exception.NotLoginException;
-import top.easyboot.springboot.operate.property.RestfulApiOperateProperties;
 import top.easyboot.springboot.operate.utils.GetOperate;
-
-import java.lang.reflect.Method;
 
 
 public class OperateInfoResolver implements HandlerMethodArgumentResolver {
-    private OperateConfiguration configuration;
-    private RestfulApiOperateProperties properties;
-    public OperateInfoResolver(OperateConfiguration operateConfiguration){
-        configuration = operateConfiguration;
-    }
-    private RestfulApiOperateProperties getProperties(){
-        if (properties == null){
-            properties = configuration.getProperties();
-        }
-        return properties;
-    }
     /**
      * 是否支持在参数调用前处理
      * @param parameter
@@ -35,9 +20,6 @@ public class OperateInfoResolver implements HandlerMethodArgumentResolver {
      */
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        if (!getProperties().isEnabled()){
-            return false;
-        }
         final Class type = parameter.getParameterType();
         if (parameter.hasParameterAnnotation(OperateUid.class)) {
             return type.isAssignableFrom(int.class) || type.isAssignableFrom(Integer.class) || type.isAssignableFrom(long.class) || type.isAssignableFrom(String.class);

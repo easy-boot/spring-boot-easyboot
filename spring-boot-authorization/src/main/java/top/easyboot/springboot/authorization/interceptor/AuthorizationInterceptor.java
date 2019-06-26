@@ -20,10 +20,6 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        // 不验证
-        if (!authProperties.isEnabled()){
-            return true;
-        }
         //1.不是HandlerMethod类型，则无需检查"
         if(!(handler instanceof HandlerMethod)){
             return true;

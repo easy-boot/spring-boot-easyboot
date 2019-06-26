@@ -22,10 +22,6 @@ public class RestfulApiAuthProperties {
      * 全部路由都验证-仅对下游微服务生效，网关无效
      */
     private boolean allVerify = true;
-    /**
-     * 是否启用
-     */
-    private boolean enabled = false;
 
     public boolean isAllVerify() {
         return allVerify;
@@ -33,14 +29,6 @@ public class RestfulApiAuthProperties {
 
     public void setAllVerify(boolean allVerify) {
         this.allVerify = allVerify;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
     }
 
     public String getSignHeaderKey() {

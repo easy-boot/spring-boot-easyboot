@@ -12,15 +12,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class OperateInterceptor implements HandlerInterceptor {
-    private RestfulApiOperateProperties properties;
-    public OperateInterceptor(RestfulApiOperateProperties operateProperties){
-        properties = operateProperties;
-    }
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        if (!properties.isEnabled()){
-            return true;
-        }
         /**
          * 操作者信息
          */

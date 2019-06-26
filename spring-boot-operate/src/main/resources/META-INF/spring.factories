@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-top.easyboot.springboot.operate.configuration.OperateConfiguration
+top.easyboot.springboot.operate.configuration.OperateConfigurationProperties

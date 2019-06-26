@@ -3,7 +3,6 @@ dependencies{
     compile project(':spring-boot-authorization')
     compile project(':spring-boot-restful-api-util')
     compile "top.easyboot.core:easyboot-rowraw:1.0.2"
-    compile "org.apache.httpcomponents:httpasyncclient:4.1.1"
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 }
 jar {
