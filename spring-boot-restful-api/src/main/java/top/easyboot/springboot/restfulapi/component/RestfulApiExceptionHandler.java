@@ -1,5 +1,6 @@
 package top.easyboot.springboot.restfulapi.component;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Description;
@@ -12,22 +13,25 @@ import top.easyboot.springboot.restfulapi.entity.RestfulApiException;
 import top.easyboot.springboot.restfulapi.exception.restTemplate.RpcException;
 import top.easyboot.springboot.restfulapi.interfaces.core.IApiExceptionHandler;
 
+import javax.annotation.PostConstruct;
+
 @RestControllerAdvice
 @ResponseBody
 public class RestfulApiExceptionHandler {
+    @Autowired(required = false)
+    private ApiExceptionHandler handler;
+    @PostConstruct
+    public void init(){
+       if (handler == null){
+           handler = new ApiExceptionHandler();
+       }
+    }
     @ExceptionHandler(Exception.class)
-    public RestfulApiException exceptionHandler(Exception e, IApiExceptionHandler handler, NativeWebRequest request){
+    public RestfulApiException exceptionHandler(Exception e, NativeWebRequest request){
         return handler.exceptionHandler(e, request);
     }
     @ExceptionHandler(RpcException.class)
-    public RestfulApiException rpcExceptionHandler(RpcException e, IApiExceptionHandler handler, NativeWebRequest request){
+    public RestfulApiException rpcExceptionHandler(RpcException e, NativeWebRequest request){
         return handler.exceptionHandler(e, request);
-    }
-
-    @Bean(name = "easybootApiExceptionHandler")
-    @Description("Auto use easyboot apiExceptionHandler")
-    @ConditionalOnMissingBean(IApiExceptionHandler.class)
-    public IApiExceptionHandler easybootApiExceptionHandler(){
-        return new ApiExceptionHandler();
     }
 }

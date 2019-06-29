@@ -45,22 +45,29 @@ public class OperateInfoResolver implements HandlerMethodArgumentResolver {
          */
         final Operate operate = GetOperate.get(request);
         final Class type = parameter.getParameterType();
+        final boolean isReturnLong = type.isAssignableFrom(long.class) || type.isAssignableFrom(Long.class);
+        final boolean isReturnInteger = type.isAssignableFrom(int.class) || type.isAssignableFrom(Integer.class);
 
         if (parameter.hasParameterAnnotation(OperateUid.class)) {
-            if (type.isAssignableFrom(int.class) || type.isAssignableFrom(Integer.class) || type.isAssignableFrom(long.class) || type.isAssignableFrom(String.class)){
+            if (isReturnInteger || isReturnLong || type.isAssignableFrom(String.class)){
 
                 final OperateUid operateUidAnnotation = parameter.getParameterAnnotation(OperateUid.class);
-                if (operate.isLogin()){
-                    return operate.getUid();
-                }else if(operateUidAnnotation.isCheck()){
+                if (!operate.isLogin() && operateUidAnnotation.isCheck()){
                     throw NotLoginException.create(parameter);
                 }
-                if (type.isAssignableFrom(int.class) || type.isAssignableFrom(Integer.class)){
-                    return Integer.valueOf(operateUidAnnotation.uid());
-                }else if (type.isAssignableFrom(long.class)){
-                    return Long.valueOf(operateUidAnnotation.uid());
+                String uid = operate.getUid();
+                if (uid == null || uid.isEmpty()){
+                    uid = operateUidAnnotation.uid();
                 }
-                return operateUidAnnotation.uid();
+                if (uid == null || uid.isEmpty()){
+                    return (isReturnLong || isReturnInteger) ? 0 : uid;
+                }
+                if (isReturnInteger){
+                    return Integer.valueOf(uid);
+                }else if (isReturnLong){
+                    return Long.valueOf(uid);
+                }
+                return uid;
             }
             return null;
         }else if (type.isAssignableFrom(Operate.class) && parameter.hasParameterAnnotation(OperateInfo.class)) {
