@@ -1,7 +1,6 @@
 package top.easyboot.springboot.restfulapi.gateway.service;
 
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -10,13 +9,14 @@ import org.springframework.web.reactive.DispatcherHandler;
 import org.springframework.web.reactive.socket.WebSocketMessage;
 import top.easyboot.core.rowraw.RowRawEntity;
 import top.easyboot.core.rowraw.RowRawUtil;
-import top.easyboot.springboot.restfulapi.gateway.core.WebSocketSessionBase;
 import top.easyboot.springboot.restfulapi.gateway.exception.SessionException;
 import top.easyboot.springboot.restfulapi.gateway.handler.RowRawApiHandler;
 import top.easyboot.springboot.restfulapi.gateway.handler.RowRawPingHandler;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.handler.ISessionMessageHandler;
 import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties.WebSocket;
-import top.easyboot.springboot.restfulapi.util.ConnectionIdUtil;
+import top.easyboot.springboot.utils.core.HexIp;
+import top.easyboot.springboot.utils.core.PortUniqueId;
+import top.easyboot.springboot.utils.interfaces.core.IPortUniqueId;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -25,15 +25,14 @@ import java.util.List;
 
 @Service
 public class SessionService extends SessionAbstractService  implements ApplicationContextAware {
-    /**
-     * 链接id工具
-     */
-    protected ConnectionIdUtil connectionIdUtil;
 
     protected List<ISessionMessageHandler> messageHandlers;
 
     protected RowRawApiHandler rowRawApiHandler;
 
+    protected String connectionIdPrefix;
+
+    protected IPortUniqueId portUniqueId;
 
     @Override
     public void setApplicationContext(ApplicationContext context) throws BeansException {
@@ -51,7 +50,8 @@ public class SessionService extends SessionAbstractService  implements Applicati
     }
     public SessionService(WebSocket webSocket, List<ISessionMessageHandler> handlers) {
         messageHandlers = handlers;
-        connectionIdUtilInit(webSocket);
+        portUniqueId = new PortUniqueId();
+        connectionIdPrefixInit(webSocket);
     }
 
     @Override
@@ -74,13 +74,18 @@ public class SessionService extends SessionAbstractService  implements Applicati
 
     @Override
     public String generateConnectionId() throws SessionException {
-        if (connectionIdUtil == null){
-            throw new SessionException("connectionIdUtil is null");
-        }
-        try {
-            return connectionIdUtil.generateConnectionId();
-        }catch (ConnectionIdUtil.Exception e){
-            throw new SessionException(e.getMessage(), e);
+        String batchRecorderHex;
+        String connectionId;
+        int times = 0;
+        while (true){
+            batchRecorderHex = portUniqueId.getNextUniqueId();
+            connectionId = connectionIdPrefix + batchRecorderHex;
+            if (!containsKey(connectionId)){
+                return connectionId;
+            }
+            if (portUniqueId.getFisrtUniqueId().equals(batchRecorderHex) && (++times)>=2){
+                throw new SessionException(SessionException.E_NOT_AVAILABLE_CONNECTION_ID);
+            }
         }
     }
 
@@ -107,29 +112,19 @@ public class SessionService extends SessionAbstractService  implements Applicati
         }
     }
 
-
-
-
-    protected void connectionIdUtilInit(WebSocket webSocket){
-        String connectionIdPrefix = webSocket.getConnectionIdPrefix();
-        if (connectionIdPrefix == null || connectionIdPrefix.isEmpty()){
+    protected void connectionIdPrefixInit(WebSocket webSocket){
+        String ip = webSocket.getRpcIp();
+        if (ip == null || ip.isEmpty()){
             try {
-                connectionIdPrefix = InetAddress.getLocalHost().getHostAddress();
+                ip = InetAddress.getLocalHost().getHostAddress();
             }catch (UnknownHostException e){
             }
         }
-        if (connectionIdPrefix == null || connectionIdPrefix.isEmpty()){
-            connectionIdPrefix = "127.0.0.1";
+        if (ip == null || ip.isEmpty()){
+            ip = "127.0.0.1";
         }
-        webSocket.setConnectionIdPrefix(connectionIdPrefix);
-
-        connectionIdUtil = new ConnectionIdUtil(){
-            @Override
-            protected boolean isUseIng(String connectionId) {
-                return containsKey(connectionId);
-            }
-        };
-        connectionIdUtil.setConnectionIdPrefixByIpV4(connectionIdPrefix);
+        String ipHex = HexIp.ipToHex(ip);
+        connectionIdPrefix = (ipHex.length() == 8 ? "4":"6") + ipHex;
     }
 
 }

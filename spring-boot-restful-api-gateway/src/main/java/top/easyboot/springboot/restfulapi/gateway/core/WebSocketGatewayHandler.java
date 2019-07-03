@@ -12,6 +12,8 @@ import top.easyboot.springboot.restfulapi.gateway.interfaces.service.ISessionSer
 import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties;
 import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties.WebSocket;
 import org.springframework.web.reactive.socket.WebSocketSession;
+import top.easyboot.springboot.utils.exception.BaseException;
+
 import java.util.*;
 
 @Component
@@ -91,7 +93,7 @@ public class WebSocketGatewayHandler implements IWebSocketGatewayHandler {
                         throwable.printStackTrace();
                     }
                 });
-            }catch (SessionException e){
+            }catch (BaseException e){
                 e.printStackTrace();
                 return session.close();
             }

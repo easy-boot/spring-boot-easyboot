@@ -1,10 +1,11 @@
 package top.easyboot.springboot.restfulapi.gateway.core;
 
-import top.easyboot.springboot.restfulapi.util.ConnectionIdUtil;
+import top.easyboot.springboot.utils.entity.core.WebSocketConnection;
+import top.easyboot.springboot.utils.exception.WebSocketConnectionException;
 
 import java.util.Date;
 
-public class WebSocketSessionEntity extends ConnectionIdUtil.Entity {
+public class WebSocketSessionEntity extends WebSocketConnection {
     /**
      * 当前登录用户
      */
@@ -25,13 +26,12 @@ public class WebSocketSessionEntity extends ConnectionIdUtil.Entity {
     /**
      * 实例化
      * @param connectionId 连接id
-     * @throws ConnectionIdUtil.Exception 连接异常
+     * @throws WebSocketConnectionException 连接异常
      */
-    protected WebSocketSessionEntity(String connectionId) throws ConnectionIdUtil.Exception {
+    protected WebSocketSessionEntity(String connectionId) throws WebSocketConnectionException {
         super(connectionId);
         startedAt = new Date();
         updatedAt = new Date();
-
     }
 
     public String getUid() {

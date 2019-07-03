@@ -19,7 +19,6 @@ import org.springframework.web.server.session.WebSessionManager;
 import reactor.core.publisher.Flux;
 import top.easyboot.core.rowraw.RowRawEntity;
 import top.easyboot.core.rowraw.RowRawUtil;
-import top.easyboot.springboot.restfulapi.entity.RestfulApiException;
 import top.easyboot.springboot.restfulapi.exception.ApiException;
 import top.easyboot.springboot.restfulapi.gateway.core.RowRawApiExchange;
 import top.easyboot.springboot.restfulapi.gateway.core.RowRawApiRequest;
@@ -28,6 +27,7 @@ import top.easyboot.springboot.restfulapi.gateway.core.WebSocketSessionBase;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.handler.ISessionMessageHandler;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.service.ISessionService;
 import top.easyboot.springboot.restfulapi.gateway.property.RestfulApiGatewayProperties.WebSocket;
+import top.easyboot.springboot.restfulapi.interfaces.exception.IApiExceptionEntity;
 
 import java.net.*;
 import java.util.Arrays;
@@ -182,10 +182,9 @@ public class RowRawApiHandler implements ISessionMessageHandler {
         throwable.printStackTrace();
 
         final RowRawEntity resEntity = new RowRawEntity();
-        final RestfulApiException res = new RestfulApiException();
+        final IApiExceptionEntity res = new ApiException.Entity(throwable.getMessage(), "UNKNOW_ERROR");
         final HttpStatus httpStatus = HttpStatus.resolve(500);
         res.setStatsCode(httpStatus.value());
-        res.setMessage(throwable.getMessage());
         if (throwable instanceof ApiException){
             ApiException et = (ApiException) throwable;
             res.setExceptionId(et.getExceptionId());

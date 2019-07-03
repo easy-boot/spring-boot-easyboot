@@ -1,8 +1,8 @@
 package top.easyboot.springboot.restfulapi.interfaces.core;
 
 import org.springframework.web.context.request.NativeWebRequest;
-import top.easyboot.springboot.restfulapi.entity.RestfulApiException;
+import top.easyboot.springboot.restfulapi.interfaces.exception.IApiExceptionEntity;
 
 public interface IApiExceptionHandler {
-    RestfulApiException exceptionHandler(Throwable throwable, NativeWebRequest request);
+    IApiExceptionEntity exceptionHandler(Throwable throwable, NativeWebRequest request);
 }

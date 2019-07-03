@@ -7,6 +7,7 @@ rootProject.name = 'spring-boot-easyboot'
 include 'spring-boot-restful-api'
 include 'spring-boot-restful-api-gateway'
 include 'spring-boot-restful-api-util'
+include 'spring-boot-utils'
 include 'spring-boot-operate'
 include 'spring-boot-authorization'
 

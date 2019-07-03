@@ -8,10 +8,11 @@ import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestClientException;
-import top.easyboot.springboot.restfulapi.entity.RestfulApiException;
+import top.easyboot.springboot.restfulapi.exception.ApiException;
 import top.easyboot.springboot.restfulapi.exception.restTemplate.RpcException;
 import top.easyboot.springboot.restfulapi.http.converter.UrlencodedHttpMessageConverter;
-import top.easyboot.springboot.restfulapi.util.Jackson;
+import top.easyboot.springboot.restfulapi.interfaces.exception.IApiExceptionEntity;
+import top.easyboot.springboot.utils.core.Jackson;
 
 import java.io.IOException;
 import java.net.URI;
@@ -41,11 +42,9 @@ public class RestTemplate extends org.springframework.web.client.RestTemplate {
     protected void handleResponse(URI url, HttpMethod method, ClientHttpResponse response) throws IOException {
         if (response.getStatusCode().isError()){
             try {
-                throw new RpcException(Jackson.getObjectMapper().readValue(response.getBody(), RestfulApiException.class));
+                throw new RpcException(Jackson.getObjectMapper().readValue(response.getBody(), ApiException.Entity.class));
             }catch (IOException e){
-                RestfulApiException ae = new RestfulApiException();
-                ae.setMessage(e.getMessage());
-                ae.setExceptionId("RPC_FAIL");
+                IApiExceptionEntity ae = new ApiException.Entity(e.getMessage(), "RPC_FAIL");
                 ae.setStatsCode(500);
                 throw new RpcException(ae, e);
             }

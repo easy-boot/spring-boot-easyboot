@@ -6,7 +6,7 @@ import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
 import reactor.core.Disposable;
 import reactor.core.Disposables;
-import top.easyboot.springboot.restfulapi.util.ConnectionIdUtil;
+import top.easyboot.springboot.utils.exception.WebSocketConnectionException;
 
 import java.util.function.Function;
 
@@ -16,7 +16,7 @@ public abstract class WebSocketSessionAbstract extends WebSocketSessionBase {
      * compositeClose
      */
     protected final Disposable.Composite compositeClose;
-    protected WebSocketSessionAbstract(String connectionId, WebSocketSession webSocketSession) throws ConnectionIdUtil.Exception {
+    protected WebSocketSessionAbstract(String connectionId, WebSocketSession webSocketSession) throws WebSocketConnectionException {
         super(connectionId, webSocketSession);
         isCloseable = true;
         compositeClose = Disposables.composite();

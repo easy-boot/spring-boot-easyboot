@@ -8,7 +8,7 @@ import top.easyboot.springboot.authorization.interfaces.AuthSignDrive;
 import top.easyboot.springboot.authorization.interfaces.http.Headers;
 import top.easyboot.springboot.authorization.signer.Sha256Signer;
 import top.easyboot.springboot.authorization.exception.AuthSignException;
-import top.easyboot.springboot.restfulapi.util.Jackson;
+import top.easyboot.springboot.utils.core.Jackson;
 
 import java.util.*;
 import java.util.regex.Matcher;

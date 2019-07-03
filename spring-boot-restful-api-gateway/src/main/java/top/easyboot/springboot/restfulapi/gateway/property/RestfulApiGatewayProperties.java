@@ -32,9 +32,9 @@ public class RestfulApiGatewayProperties {
          */
         private Integer order;
         /**
-         * 链接id前缀
+         * 远程调用ip
          */
-        private String connectionIdPrefix;
+        private String rpcIp;
         /**
          * 请求id的头的key
          */
@@ -72,12 +72,12 @@ public class RestfulApiGatewayProperties {
             this.order = order;
         }
 
-        public String getConnectionIdPrefix() {
-            return connectionIdPrefix;
+        public String getRpcIp() {
+            return rpcIp;
         }
 
-        public void setConnectionIdPrefix(String connectionIdPrefix) {
-            this.connectionIdPrefix = connectionIdPrefix;
+        public void setRpcIp(String rpcIp) {
+            this.rpcIp = rpcIp;
         }
 
         public String getRequestIdHeaderKey() {

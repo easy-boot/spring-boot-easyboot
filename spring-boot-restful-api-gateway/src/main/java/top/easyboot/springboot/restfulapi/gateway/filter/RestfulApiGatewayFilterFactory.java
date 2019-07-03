@@ -18,6 +18,7 @@ import top.easyboot.springboot.authorization.exception.AuthSignException;
 import top.easyboot.springboot.authorization.interfaces.core.IAuthClient;
 import top.easyboot.springboot.authorization.property.RestfulApiAuthProperties;
 import top.easyboot.springboot.operate.property.RestfulApiOperateProperties;
+import top.easyboot.springboot.restfulapi.exception.ApiException;
 import top.easyboot.springboot.restfulapi.gateway.core.RowRawApiRequest;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.service.ISessionService;
 import top.easyboot.springboot.restfulapi.gateway.interfaces.service.IUserAuthAccessService;
@@ -30,7 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.springframework.core.io.buffer.DataBuffer;
-import top.easyboot.springboot.restfulapi.entity.RestfulApiException;
+import top.easyboot.springboot.restfulapi.interfaces.exception.IApiExceptionEntity;
 
 
 @Component
@@ -220,20 +221,12 @@ public class RestfulApiGatewayFilterFactory extends AbstractGatewayFilterFactory
                     /**
                      * 构建一个异常
                      */
-                    RestfulApiException res = new RestfulApiException();
+                    IApiExceptionEntity res = new ApiException.Entity(authSignException.getMessage(), authSignException.getExceptionId());
 
                     /**
                      * 403状态错误
                      */
                     res.setStatsCode(403);
-                    /**
-                     * 提示消息
-                     */
-                    res.setMessage(authSignException.getMessage());
-                    /**
-                     * 异常id
-                     */
-                    res.setExceptionId(authSignException.getExceptionId());
 
                     /**
                      * 转换为bits

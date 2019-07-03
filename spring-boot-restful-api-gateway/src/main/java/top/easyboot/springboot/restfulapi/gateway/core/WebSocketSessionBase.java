@@ -7,11 +7,9 @@ import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.socket.HandshakeInfo;
 import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
-import reactor.core.Disposable;
-import reactor.core.Disposables;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
-import top.easyboot.springboot.restfulapi.util.ConnectionIdUtil;
+import top.easyboot.springboot.utils.exception.WebSocketConnectionException;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -39,7 +37,7 @@ public abstract class WebSocketSessionBase extends WebSocketSessionEntity {
      * sink
      */
     protected FluxSink<WebSocketMessage> sink;
-    protected WebSocketSessionBase(String connectionId, WebSocketSession webSocketSession) throws ConnectionIdUtil.Exception {
+    protected WebSocketSessionBase(String connectionId, WebSocketSession webSocketSession) throws WebSocketConnectionException {
         super(connectionId);
         this.connectionId = connectionId;
         flux = Flux.create(sink ->fluxSinkInit(sink));

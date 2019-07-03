@@ -1,25 +1,25 @@
 package top.easyboot.springboot.restfulapi.core;
 
 import org.springframework.web.context.request.NativeWebRequest;
-import top.easyboot.springboot.restfulapi.entity.RestfulApiException;
 import top.easyboot.springboot.restfulapi.exception.ApiException;
 import top.easyboot.springboot.restfulapi.exception.restTemplate.RpcException;
 import top.easyboot.springboot.restfulapi.interfaces.core.IApiExceptionHandler;
+import top.easyboot.springboot.restfulapi.interfaces.exception.IApiException;
+import top.easyboot.springboot.restfulapi.interfaces.exception.IApiExceptionEntity;
 
 import javax.servlet.http.HttpServletResponse;
 
 public class ApiExceptionHandler implements IApiExceptionHandler {
-    public RestfulApiException exceptionHandler(Throwable throwable, NativeWebRequest request){
-        final RestfulApiException res;
+    public IApiExceptionEntity exceptionHandler(Throwable throwable, NativeWebRequest request){
+        final IApiExceptionEntity res;
         final HttpServletResponse response = request.getNativeResponse(HttpServletResponse.class);
         if (throwable instanceof RpcException){
-            res = ((RpcException) throwable).getRestfulApiException();
+            res = ((RpcException) throwable).getEntity();
         } else {
-            res = new RestfulApiException();
-            res.setMessage(throwable.getMessage());
+            res = new ApiException.Entity(throwable.getMessage(), "UNKNOW_ERROR");
 
-            if (throwable instanceof ApiException){
-                final ApiException et = (ApiException) throwable;
+            if (throwable instanceof IApiException){
+                final IApiException et = (IApiException) throwable;
 
                 res.setExceptionId(et.getExceptionId());
                 res.setStatsCode(et.getStatsCode());

@@ -1,4 +1,4 @@
-package top.easyboot.springboot.restfulapi.util;
+package top.easyboot.springboot.utils.core;
 
 
 import com.fasterxml.jackson.core.JsonProcessingException;

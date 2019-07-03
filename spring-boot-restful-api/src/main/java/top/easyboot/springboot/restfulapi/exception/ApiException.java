@@ -1,82 +1,45 @@
 package top.easyboot.springboot.restfulapi.exception;
 
-import top.easyboot.springboot.restfulapi.annotation.ExampleMessage;
-import top.easyboot.springboot.restfulapi.entity.RestfulApiException;
+import top.easyboot.springboot.restfulapi.interfaces.exception.IApiException;
+import top.easyboot.springboot.restfulapi.interfaces.exception.IApiExceptionEntity;
+import top.easyboot.springboot.utils.exception.BaseException;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.HashMap;
 
-public class ApiException extends java.lang.Exception {
-    private int statsCode = 400;
-    private HashMap messageData;
-    private RestfulApiException restfulApiException;
-    private static int lastExceptionId = 0;
-    private static HashMap<String, RestfulApiException> messageMap = new HashMap();
-    public final static int id(){
-        return ++lastExceptionId;
-    }
+public class ApiException extends BaseException implements IApiException {
+    private Integer statsCode;
 
-    public ApiException(int inputId, HashMap messageData, Throwable cause){
+    public ApiException(long inputId, HashMap messageData, Throwable cause){
         this(inputId, cause);
         this.setMessageData(messageData);
     }
-    public ApiException(int inputId, HashMap messageData){
+    public ApiException(long inputId, HashMap messageData){
         this(inputId);
         this.setMessageData(messageData);
     }
-    public ApiException(RestfulApiException e){
-        restfulApiException = e;
+    public ApiException(Entity e){
+        super(e);
     }
-    public ApiException(int inputId){
-        super();
-        String id = String.valueOf(inputId);
-        if (!messageMap.containsKey(id)){
-            initExceptionIdMap();
-        }
-        restfulApiException = messageMap.containsKey(id)?messageMap.get(id) : new RestfulApiException();
+    public ApiException(long inputId){
+        super(inputId);
     }
-    public ApiException(int inputId, Throwable cause){
-        super(cause);
-        String id = String.valueOf(inputId);
-        if (!messageMap.containsKey(id)){
-            initExceptionIdMap();
-        }
-        restfulApiException = messageMap.containsKey(id)?messageMap.get(id) : new RestfulApiException();
+    public ApiException(long inputId, Throwable cause){
+        super(inputId, cause);
     }
 
-    public int getId(){
-        return restfulApiException.getId();
-    }
     @Override
-    public String getMessage() {
-        String message = restfulApiException.getMessage(messageData);
-        try {
-            if (message == null || message.isEmpty()){
-                message = super.getMessage();
-            }
-        }catch (NullPointerException e){
-            message = "unknow error";
-        }
-        return message;
+    public BaseException.Entity createExceptionEntity(long id, String exceptionId) {
+        return new Entity(id, exceptionId);
     }
 
-    public HashMap getMessageData() {
-        return messageData;
-    }
-
-    public void setMessageData(HashMap messageData) {
-        this.messageData = messageData;
-    }
-
-    public String getExceptionId(){
-        return restfulApiException.getExceptionId();
+    @Override
+    public BaseException.Entity createExceptionEntity(String message, String exceptionId) {
+        return new Entity(message, exceptionId);
     }
 
     public int getStatsCode() {
-        int statsCode = this.statsCode;
-        if (statsCode == 0){
-            statsCode = restfulApiException.getStatsCode();
+        if (statsCode == null && entity instanceof Entity){
+            statsCode = ((Entity)entity).getStatsCode();
         }
         return statsCode;
     }
@@ -85,28 +48,24 @@ public class ApiException extends java.lang.Exception {
         this.statsCode = statsCode;
     }
 
-    protected void initExceptionIdMap(){
-        Field[] fields = this.getClass().getFields();
-        try {
-            for (Field field : fields) {
-                field.setAccessible(true);
-                if(field.getType().toString().endsWith("int") && Modifier.isStatic(field.getModifiers())){
-                    Object id = field.get(this);
-                    String exceptionId = field.getName();
-                    if (id instanceof Number && exceptionId.startsWith("E_")){
-                        RestfulApiException re = new RestfulApiException();
-                        re.setId((int)id);
-                        re.setExceptionId(exceptionId.substring(2));
-                        ExampleMessage em = field.getAnnotation(ExampleMessage.class);
-                        if (em != null){
-                            re.setMessageTemplate(em.value());
-                        }
-                        messageMap.put(String.valueOf(id), re);
-                    }
-                }
-            }
-        } catch (java.lang.Exception e) {
-            e.printStackTrace();
+    public static class Entity extends BaseException.Entity implements IApiExceptionEntity {
+        private int statsCode = 500;
+
+        public Entity(long id, String exceptionId) {
+            super(id, exceptionId);
         }
+
+        public Entity(String message, String exceptionId) {
+            super(message, exceptionId);
+        }
+
+        public int getStatsCode() {
+            return statsCode;
+        }
+
+        public void setStatsCode(int statsCode) {
+            this.statsCode = statsCode;
+        }
+
     }
 }

@@ -3,6 +3,8 @@ package top.easyboot.springboot.restfulapi.gateway.interfaces.service;
 import org.springframework.web.reactive.socket.WebSocketSession;
 import top.easyboot.springboot.restfulapi.gateway.core.WebSocketSessionBase;
 import top.easyboot.springboot.restfulapi.gateway.exception.SessionException;
+import top.easyboot.springboot.utils.exception.BaseException;
+
 import java.util.Map;
 
 public interface ISessionService extends Map<String, WebSocketSessionBase> {
@@ -11,7 +13,7 @@ public interface ISessionService extends Map<String, WebSocketSessionBase> {
      * @param session reactiveWebSocketSession
      * @return easybootWebSocketSession
      */
-    WebSocketSessionBase createSession(WebSocketSession session) throws SessionException;
+    WebSocketSessionBase createSession(WebSocketSession session) throws BaseException;
 
     /**
      * 创建连接

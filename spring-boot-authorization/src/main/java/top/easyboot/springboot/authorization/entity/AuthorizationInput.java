@@ -1,7 +1,7 @@
 package top.easyboot.springboot.authorization.entity;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import top.easyboot.springboot.restfulapi.util.Jackson;
+import top.easyboot.springboot.utils.core.Jackson;
 
 import java.net.URI;
 import java.util.Map;
