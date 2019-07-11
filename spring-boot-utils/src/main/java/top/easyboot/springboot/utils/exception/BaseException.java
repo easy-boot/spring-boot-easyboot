@@ -95,21 +95,25 @@ public class BaseException extends java.lang.Exception implements IBaseException
         try {
             for (Field field : fields) {
                 field.setAccessible(true);
-                if(field.getType().toString().endsWith("int") && Modifier.isStatic(field.getModifiers())){
+                final String type = field.getType().toString();
+                if((type.endsWith("int")||type.endsWith("long")) && Modifier.isStatic(field.getModifiers())){
                     Object id = field.get(this);
                     String exceptionId = field.getName();
                     if (id instanceof Number && exceptionId.startsWith("E_")){
                         Entity re = createExceptionEntity((long)id, exceptionId.substring(2));
-                        ExampleMessage em = field.getAnnotation(ExampleMessage.class);
-                        if (em != null){
-                            re.setMessageTemplate(em.value());
-                        }
+                        initMessageTemplate(re, field);
                         messageMap.put(String.valueOf(id), re);
                     }
                 }
             }
         } catch (java.lang.Exception e) {
             e.printStackTrace();
+        }
+    }
+    protected void initMessageTemplate(Entity entity, Field field){
+        ExampleMessage em = field.getAnnotation(ExampleMessage.class);
+        if (em != null){
+            entity.setMessageTemplate(em.value());
         }
     }
     public Entity createExceptionEntity(long id, String exceptionId){

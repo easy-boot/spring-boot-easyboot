@@ -5,17 +5,21 @@ import java.util.Set;
 
 public class GlobalUniqueId {
     /**
-     * 数据库名字
+     * 数据库collection、table名字
      */
-    private String name;
+    protected String name;
     /**
      * 可以使用的规则
      */
-    private LinkedHashSet<Interval> use;
+    protected LinkedHashSet<Interval> unused;
+    /**
+     * 已经使用规则
+     */
+    protected Set<Interval> used;
     /**
      * 排除规则
      */
-    private Set<Interval> exclude;
+    protected Set<Interval> exclude;
 
     public String getName() {
         return name;
@@ -25,12 +29,20 @@ public class GlobalUniqueId {
         this.name = name;
     }
 
-    public LinkedHashSet<Interval> getUse() {
-        return use;
+    public LinkedHashSet<Interval> getUnused() {
+        return unused;
     }
 
-    public void setUse(LinkedHashSet<Interval> use) {
-        this.use = use;
+    public void setUnused(LinkedHashSet<Interval> unused) {
+        this.unused = unused;
+    }
+
+    public Set<Interval> getUsed() {
+        return used;
+    }
+
+    public void setUsed(Set<Interval> used) {
+        this.used = used;
     }
 
     public Set<Interval> getExclude() {

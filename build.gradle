@@ -23,7 +23,7 @@ allprojects {
     /**
      * 版本
      */
-    version = '0.0.12-SNAPSHOT'
+    version = '0.0.19-SNAPSHOT'
     /**
      * 组
      */
@@ -141,8 +141,8 @@ allprojects {
                 }
 
                 credentials {
-                    username = "yuchonghua"  // 之前在 sonatype 注册的账户名
-                    password = "Ych*13692633255" // 对应的密码
+                    username = "${NEXUS_USERNAME}"// 之前在 sonatype 注册的账户名
+                    password = "${NEXUS_PASSWORD}"// 对应的密码
                 }
             }
         }

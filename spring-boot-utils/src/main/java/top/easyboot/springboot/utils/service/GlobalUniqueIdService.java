@@ -20,7 +20,8 @@ public class GlobalUniqueIdService implements IGlobalUniqueIdService {
     /**
      * 管理
      */
-    private Manage manage;
+    private final Manage manage;
+
     public GlobalUniqueIdService(){
         this("default");
     }

@@ -2,6 +2,7 @@ package top.easyboot.springboot.authorization.interceptor;
 
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
+import top.easyboot.springboot.authorization.annotation.IgnoreAuthorization;
 import top.easyboot.springboot.authorization.annotation.VerifyAuthorization;
 import top.easyboot.springboot.authorization.entity.Authorization;
 import top.easyboot.springboot.authorization.exception.AuthSignException;
@@ -24,7 +25,11 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
         if(!(handler instanceof HandlerMethod)){
             return true;
         }
+
         HandlerMethod method = (HandlerMethod)handler;
+        if ((method.getMethod().isAnnotationPresent(IgnoreAuthorization.class) || method.getMethod().getDeclaringClass().isAnnotationPresent(IgnoreAuthorization.class))){
+            return true;
+        }
         boolean hasAuthAnnotation = authProperties.isAllVerify() || (method.getMethod().isAnnotationPresent(VerifyAuthorization.class) || method.getMethod().getDeclaringClass().isAnnotationPresent(VerifyAuthorization.class));
 
         // 不存在@VerifyAuthorization注解，则直接通过，放弃切面

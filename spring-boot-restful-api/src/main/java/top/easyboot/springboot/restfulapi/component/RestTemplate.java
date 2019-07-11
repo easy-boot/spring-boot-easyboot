@@ -42,7 +42,7 @@ public class RestTemplate extends org.springframework.web.client.RestTemplate {
     protected void handleResponse(URI url, HttpMethod method, ClientHttpResponse response) throws IOException {
         if (response.getStatusCode().isError()){
             try {
-                throw new RpcException(Jackson.getObjectMapper().readValue(response.getBody(), ApiException.Entity.class));
+                throw new RpcException(Jackson.getObjectMapper().readValue(response.getBody(), ApiExceptionEntity.class));
             }catch (IOException e){
                 IApiExceptionEntity ae = new ApiException.Entity(e.getMessage(), "RPC_FAIL");
                 ae.setStatsCode(500);
@@ -50,6 +50,11 @@ public class RestTemplate extends org.springframework.web.client.RestTemplate {
             }
         }
         super.handleResponse(url, method, response);
+    }
+    protected static class ApiExceptionEntity extends ApiException.Entity{
+        public ApiExceptionEntity(){
+            super("RPC_FAIL", "RPC_FAIL");
+        }
     }
 
     @Override
