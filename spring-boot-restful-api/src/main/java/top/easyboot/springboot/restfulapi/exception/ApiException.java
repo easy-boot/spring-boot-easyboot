@@ -7,6 +7,7 @@ import top.easyboot.springboot.utils.exception.BaseException;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.Map;
 
 public class ApiException extends BaseException implements IApiException {
     private Integer statsCode;
@@ -59,9 +60,17 @@ public class ApiException extends BaseException implements IApiException {
             entity.setMessageTemplate(em.value());
         }
     }
+    public Map getData() {
+        return ((Entity)entity).getData();
+    }
+
+    public void setData(Map data) {
+        ((Entity)entity).setData(data);
+    }
 
     public static class Entity extends BaseException.Entity implements IApiExceptionEntity {
         private int statsCode = 500;
+        private Map data = new HashMap();
 
         public Entity(long id, String exceptionId) {
             super(id, exceptionId);
@@ -79,5 +88,12 @@ public class ApiException extends BaseException implements IApiException {
             this.statsCode = statsCode;
         }
 
+        public Map getData() {
+            return data;
+        }
+
+        public void setData(Map data) {
+            this.data = data;
+        }
     }
 }

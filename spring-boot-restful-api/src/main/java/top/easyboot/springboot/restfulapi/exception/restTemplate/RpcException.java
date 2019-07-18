@@ -4,6 +4,8 @@ import org.springframework.web.client.RestClientException;
 import top.easyboot.springboot.restfulapi.interfaces.exception.IApiExceptionEntity;
 import top.easyboot.springboot.restfulapi.interfaces.exception.IRpcException;
 
+import java.util.Map;
+
 public class RpcException extends RestClientException implements IRpcException {
     private IApiExceptionEntity entity;
     public RpcException(IApiExceptionEntity e, Throwable throwable){
@@ -57,6 +59,16 @@ public class RpcException extends RestClientException implements IRpcException {
     @Override
     public void setStatsCode(int statsCode) {
         entity.setStatsCode(statsCode);
+    }
+
+    @Override
+    public Map getData() {
+        return entity.getData();
+    }
+
+    @Override
+    public void setData(Map data) {
+        entity.setData(data);
     }
 
     @Override

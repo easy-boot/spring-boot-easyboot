@@ -23,7 +23,7 @@ allprojects {
     /**
      * 版本
      */
-    version = '0.0.19-SNAPSHOT'
+    version = '0.0.21-SNAPSHOT'
     /**
      * 组
      */
@@ -143,6 +143,26 @@ allprojects {
                 credentials {
                     username = "${NEXUS_USERNAME}"// 之前在 sonatype 注册的账户名
                     password = "${NEXUS_PASSWORD}"// 对应的密码
+                }
+            }
+            // 添加一个私有远程仓库地址
+            maven {
+                // 在对 task 中会生成对应的名称 publishMavenJavaPublicationToxxx
+                // 后面的 xxx 就是你这里的名称，表示你要把jar 上传到这个仓库中
+
+                if (project.version.endsWith('-SNAPSHOT')) {
+                    // 快照版本的nexus|snapshots仓库地址
+                    name = 'rdcSnapshotRepository'
+                    url "https://repo.rdc.aliyun.com/repository/71785-snapshot-Q71Zpu/"
+                } else {
+                    // release版本的仓库地址
+                    name 'rdcReleasesRepository'
+                    url "https://repo.rdc.aliyun.com/repository/71785-release-gF6NJn/"
+                }
+
+                credentials {
+                    username = "tM22OE"
+                    password = "lOhp0H0sCq"
                 }
             }
         }
