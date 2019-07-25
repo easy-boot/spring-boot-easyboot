@@ -7,7 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-public class GlobalUniqueIdService implements IGlobalUniqueIdService {
+public class GlobalUniqueIdService implements IGlobalUniqueIdService, Comparable<GlobalUniqueIdService> {
     private final String name;
     /**
      * 待使用的id池
@@ -34,6 +34,26 @@ public class GlobalUniqueIdService implements IGlobalUniqueIdService {
         unusedIds = new LinkedHashSet<>();
         waitReportIds = new LinkedHashSet<>();
         m.register(this);
+    }
+
+    @Override
+    public int compareTo(GlobalUniqueIdService o) {
+        int len1 = name.length();
+        int len2 = getName().length();
+        int lim = Math.min(len1, len2);
+        char v1[] = name.toCharArray();
+        char v2[] = getName().toCharArray();
+
+        int k = 0;
+        while (k < lim) {
+            char c1 = v1[k];
+            char c2 = v2[k];
+            if (c1 != c2) {
+                return c1 - c2;
+            }
+            k++;
+        }
+        return len1 - len2;
     }
 
     @Override
