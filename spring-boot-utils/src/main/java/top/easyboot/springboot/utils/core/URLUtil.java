@@ -1,6 +1,6 @@
 package top.easyboot.springboot.utils.core;
 
-import org.springframework.http.HttpHeaders;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import sun.net.util.IPAddressUtil;
 
 import java.io.IOException;
@@ -21,61 +21,15 @@ public class URLUtil {
         return builder.build();
     }
 
-    public static Map parseQuery(URL url) {
+    public static Map parseQuery(URL url)  throws IOException {
         return parseQuery(url.getQuery());
     }
-    public static Map parseQuery(String query) {
-        return null;
-//        return new QueryBuilder(query);
+    public static Map parseQuery(String query) throws IOException {
+        return Jackson.readUrlencod(query);
     }
 
-    public static String buildQuery(Map builder) {
-        return String.join("&", buildQuery(builder, ""));
-    }
-
-    protected static List<String> buildQuery(Map data, String prefix) {
-        List<String> parameterStrings = new ArrayList();
-        if (data != null){
-            for (Object key : data.keySet()) {
-                addParameter(parameterStrings, (prefix == null || prefix.isEmpty()) ? String.valueOf(key) : (prefix + "[" + key + "]"), data.get(key));
-            }
-        }
-        return parameterStrings;
-    }
-    protected static List<String> buildQuery(List data, String prefix) {
-        List<String> parameterStrings = new ArrayList();
-        if (data != null){
-            for (int i = 0; i < data.size(); i++) {
-                Object value = data.get(i);
-                addParameter(parameterStrings, (prefix == null || prefix.isEmpty()) ? String.valueOf(i) : (prefix + "[" + ((value instanceof Map|value instanceof Set|value instanceof List) ? i : "") + "]"), value);
-            }
-        }
-        return parameterStrings;
-    }
-    protected static void addParameter(List<String> parameterStrings,String name, Object value){
-        if (value == null || value instanceof String || value instanceof Number || value instanceof Boolean) {
-            final String v;
-            if (value == null){
-                v = "";
-            }else if (value instanceof String){
-                v = (String)value;
-            }else if (value instanceof Number){
-                v = String.valueOf(value);
-            }else if (value instanceof Boolean){
-                v = (Boolean)value ? "true" : "false";
-            }else{
-                v = "";
-            }
-            parameterStrings.add(urlEncode(name) + "=" + urlEncode(v));
-        } else if (value instanceof Map){
-            parameterStrings.addAll(buildQuery((Map)value, name));
-        } else if (value instanceof List){
-            parameterStrings.addAll(buildQuery((List)value, name));
-        } else if (value instanceof Set){
-            parameterStrings.addAll(buildQuery(new ArrayList((List)value), name));
-        } else if (value.getClass().isArray()){
-            parameterStrings.addAll(buildQuery(Arrays.asList(value), name));
-        }
+    public static String buildQuery(Object data) throws JsonProcessingException {
+        return Jackson.writeAsUrlencodString(data);
     }
 
     public static class Builder{
@@ -102,7 +56,7 @@ public class URLUtil {
         public String getQuery() {
             return url.getQuery();
         }
-        public Map getQueryMap() {
+        public Map getQueryMap() throws IOException {
             return parseQuery(getQuery());
         }
         public String getRef() {
@@ -131,7 +85,7 @@ public class URLUtil {
         public void setQuery(String query){
             urlStreamHandler.setURL(url, getProtocol(), getHost(), getPort(), getAuthority(), getUserInfo(), getPath(), query, getRef());
         }
-        public void setQueryMap(Map queryMap){
+        public void setQueryMap(Map queryMap) throws JsonProcessingException {
             setQuery(buildQuery(queryMap));
         }
         public void setRef(String ref){
