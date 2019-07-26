@@ -2,7 +2,7 @@ package top.easyboot.springboot.utils.service;
 
 import java.util.*;
 
-public class GlobalUniqueIdManageService extends GlobalUniqueIdManageAbstractService {
+public class GlobalUniqueIdManageService extends GlobalUniqueIdManageAbstractService<String> {
 
     public GlobalUniqueIdManageService() {
         super();

@@ -4,10 +4,10 @@ import top.easyboot.springboot.utils.interfaces.service.IGlobalUniqueIdManageSer
 
 import java.util.*;
 
-public abstract class GlobalUniqueIdManageAbstractService implements IGlobalUniqueIdManageService {
+public abstract class GlobalUniqueIdManageAbstractService<T> implements IGlobalUniqueIdManageService<T> {
     protected final TreeSet<GlobalUniqueIdService> serviceSet;
-    protected final HashMap<String, LinkedHashSet<String>> unusedIdMap;
-    protected final HashMap<String, LinkedHashSet<String>> waitReportIdMap;
+    protected final HashMap<String, LinkedHashSet<T>> unusedIdMap;
+    protected final HashMap<String, LinkedHashSet<T>> waitReportIdMap;
 
     public GlobalUniqueIdManageAbstractService() {
         this.serviceSet = new TreeSet();
@@ -36,10 +36,10 @@ public abstract class GlobalUniqueIdManageAbstractService implements IGlobalUniq
     protected void refreshUnusedId(GlobalUniqueIdService service){
         if (serviceSet.contains(service)){
             String name = service.getName();
-            Set<String> unusedIds = service.getAllUnusedId();
-            final HashSet<String> unusedIdSet = unusedIdMap.get(name);
+            Set<T> unusedIds = service.getAllUnusedId();
+            final HashSet<T> unusedIdSet = unusedIdMap.get(name);
             synchronized (unusedIdSet){
-                final Iterator<String> iterator = unusedIds.iterator();
+                final Iterator<T> iterator = unusedIds.iterator();
                 while (iterator.hasNext()){
                     unusedIdSet.add(iterator.next());
                 }
@@ -49,10 +49,10 @@ public abstract class GlobalUniqueIdManageAbstractService implements IGlobalUniq
     protected void refreshWaitReportId(GlobalUniqueIdService service){
         if (serviceSet.contains(service)){
             String name = service.getName();
-            Set<String> waitReportIds = service.getWaitReportId();
-            final HashSet<String> waitReportIdSet = waitReportIdMap.get(name);
+            Set<T> waitReportIds = service.getWaitReportId();
+            final HashSet<T> waitReportIdSet = waitReportIdMap.get(name);
             synchronized (waitReportIdSet){
-                final Iterator<String> iterator = waitReportIds.iterator();
+                final Iterator<T> iterator = waitReportIds.iterator();
                 while (iterator.hasNext()){
                     waitReportIdSet.add(iterator.next());
                 }
@@ -71,18 +71,18 @@ public abstract class GlobalUniqueIdManageAbstractService implements IGlobalUniq
             unregister(service);
         }
         for (final String name : waitReportIdMap.keySet()) {
-            final HashSet<String> waitReportIdSet = waitReportIdMap.get(name);
-            final HashSet<String> releaseUnusedIds;
+            final HashSet<T> waitReportIdSet = waitReportIdMap.get(name);
+            final HashSet<T> releaseUnusedIds;
             synchronized (waitReportIdSet){
-                releaseUnusedIds = (HashSet<String>)waitReportIdSet.clone();
+                releaseUnusedIds = (HashSet<T>)waitReportIdSet.clone();
             }
             releaseUnusedIds(name, releaseUnusedIds);
         }
         for (final String name : unusedIdMap.keySet()) {
-            final HashSet<String> unusedIdSet = unusedIdMap.get(name);
-            final HashSet<String> freedUnusedIds;
+            final HashSet<T> unusedIdSet = unusedIdMap.get(name);
+            final HashSet<T> freedUnusedIds;
             synchronized (unusedIdSet){
-                freedUnusedIds = (HashSet<String>)unusedIdSet.clone();
+                freedUnusedIds = (HashSet<T>)unusedIdSet.clone();
             }
             freedUnusedIds(name, freedUnusedIds);
         }
@@ -96,14 +96,14 @@ public abstract class GlobalUniqueIdManageAbstractService implements IGlobalUniq
      * @param name 项目
      * @param ids id集合
      */
-    protected abstract void freedUnusedIds(String name, Set<String> ids);
+    protected abstract void freedUnusedIds(String name, Set<T> ids);
 
     /**
      * 发布[保存]已经使用的全局唯一id
      * @param name 项目
      * @param ids id集合
      */
-    protected abstract void releaseUnusedIds(String name, Set<String> ids);
+    protected abstract void releaseUnusedIds(String name, Set<T> ids);
 
     /**
      * 冻结[申请]尚未使用的全局唯一id

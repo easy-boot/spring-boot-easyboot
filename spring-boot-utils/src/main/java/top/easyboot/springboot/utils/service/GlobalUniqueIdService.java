@@ -7,16 +7,16 @@ import java.util.LinkedHashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-public class GlobalUniqueIdService implements IGlobalUniqueIdService, Comparable<GlobalUniqueIdService> {
+public class GlobalUniqueIdService<T> implements IGlobalUniqueIdService<T>, Comparable<GlobalUniqueIdService<T>> {
     private final String name;
     /**
      * 待使用的id池
      */
-    private final Set<String> unusedIds;
+    private final Set<T> unusedIds;
     /**
      * 等待上报....
      */
-    private final Set<String> waitReportIds;
+    private final Set<T> waitReportIds;
     /**
      * 管理
      */
@@ -57,11 +57,11 @@ public class GlobalUniqueIdService implements IGlobalUniqueIdService, Comparable
     }
 
     @Override
-    public String createUniqueId() throws GlobalUniqueIdException {
+    public T createUniqueId() throws GlobalUniqueIdException {
         int times = 0;
         while (true){
             // 试图获取一个全局id
-            final String unusedId = getNextUnusedId();
+            final T unusedId = getNextUnusedId();
             // 获取失败
             if (unusedId == null){
                 if (times++>5){
@@ -80,10 +80,10 @@ public class GlobalUniqueIdService implements IGlobalUniqueIdService, Comparable
         }
     }
 
-    public Set<String> getWaitReportId(){
-        Set<String> res = new LinkedHashSet();
+    public Set<T> getWaitReportId(){
+        Set<T> res = new LinkedHashSet();
         synchronized (waitReportIds){
-            Iterator<String> iterator = waitReportIds.iterator();
+            Iterator<T> iterator = waitReportIds.iterator();
             while (iterator.hasNext()){
                 res.add(iterator.next());
             }
@@ -103,10 +103,10 @@ public class GlobalUniqueIdService implements IGlobalUniqueIdService, Comparable
      * 取得所有的未使用的全局唯一id
      * @return 全局唯一id
      */
-    public Set<String> getAllUnusedId(){
-        Set<String> res = new LinkedHashSet();
+    public Set<T> getAllUnusedId(){
+        Set<T> res = new LinkedHashSet();
         synchronized (unusedIds){
-            Iterator<String> unusedIdIterator = unusedIds.iterator();
+            Iterator<T> unusedIdIterator = unusedIds.iterator();
             while (unusedIdIterator.hasNext()){
                 res.add(unusedIdIterator.next());
             }
@@ -117,13 +117,13 @@ public class GlobalUniqueIdService implements IGlobalUniqueIdService, Comparable
      * 获取下一个全局唯一id
      * @return 全局唯一id
      */
-    public String getNextUnusedId(){
+    public T getNextUnusedId(){
         synchronized (unusedIds){
             // 没有初始化
             if (unusedIds != null && unusedIds.size()>0){
-                Iterator<String> unusedIdIterator = unusedIds.iterator();
+                Iterator<T> unusedIdIterator = unusedIds.iterator();
                 if (unusedIdIterator != null && unusedIdIterator.hasNext()) {
-                    final String unusedId = unusedIdIterator.next();
+                    final T unusedId = unusedIdIterator.next();
                     unusedIdIterator.remove();
                     return unusedId;
                 }
@@ -140,12 +140,12 @@ public class GlobalUniqueIdService implements IGlobalUniqueIdService, Comparable
      *
      * @param ids
      */
-    public void addUnusedIds(Set<String> ids){
+    public void addUnusedIds(Set<T> ids){
         if (ids == null){
             return;
         }
         synchronized (unusedIds){
-            Iterator<String> unusedIdIterator = ids.iterator();
+            Iterator<T> unusedIdIterator = ids.iterator();
             while (unusedIdIterator.hasNext()){
                 unusedIds.add(unusedIdIterator.next());
             }
