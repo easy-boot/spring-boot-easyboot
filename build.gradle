@@ -23,7 +23,7 @@ allprojects {
     /**
      * 版本
      */
-    version = '0.0.21-SNAPSHOT'
+    version = '0.0.24-SNAPSHOT'
     /**
      * 组
      */
@@ -80,6 +80,7 @@ allprojects {
         compileOnly 'org.springframework.boot:spring-boot-starter'
         compileOnly 'org.springframework.boot:spring-boot-starter-web'
         testCompileOnly 'org.springframework.boot:spring-boot-starter-test'
+        testCompile 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
         testCompile group: 'junit', name: 'junit', version: '4.12'
     }
 
